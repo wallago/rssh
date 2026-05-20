@@ -1,0 +1,355 @@
+/* ============================================================
+   Base
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: #0d0d0d;
+  color: #e4e4e4;
+  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Menlo", monospace;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #0d0d0d;
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* ============================================================
+   AppHeader
+   ============================================================ */
+
+.app-header {
+  padding: 16px 20px 10px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-title {
+  color: #5fafd7;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #87d75f;
+  box-shadow: 0 0 6px rgba(135, 215, 95, 0.5);
+}
+
+.header-meta {
+  margin-top: 4px;
+  color: #6e6e6e;
+  font-size: 11px;
+}
+
+/* ============================================================
+   SearchBar
+   ============================================================ */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+}
+
+.search-prompt {
+  color: #5fafd7;
+  font-size: 13px;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e4e4e4;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0;
+}
+
+.search-input::placeholder {
+  color: #444;
+}
+
+/* ============================================================
+   FilterChips
+   ============================================================ */
+
+.filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 6px 20px 10px;
+  font-size: 12px;
+}
+
+.filter-chip {
+  color: #6e6e6e;
+  cursor: pointer;
+  user-select: none;
+  padding-bottom: 1px;
+  transition: color 0.12s ease;
+}
+
+.filter-chip.active {
+  color: #e4e4e4;
+  font-weight: 700;
+  border-bottom: 1.5px solid #5fafd7;
+}
+
+.filter-add {
+  margin-left: auto;
+  color: #6e6e6e;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ============================================================
+   Divider
+   ============================================================ */
+
+.divider {
+  height: 1px;
+  background: #1f1f1f;
+  margin: 0 10px;
+}
+
+/* ============================================================
+   ArticleRow
+   ============================================================ */
+
+.article-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.article-row {
+  position: relative;
+  display: flex;
+  padding: 12px 20px 12px 16px;
+  border-bottom: 1px solid #1f1f1f;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.article-row:active {
+  background: #181818;
+}
+
+.article-row.selected {
+  background: #141822;
+}
+
+.source-bar {
+  width: 3px;
+  align-self: stretch;
+  margin-right: 12px;
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+
+.article-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.article-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.source-name {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.meta-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.star {
+  color: #e5c07b;
+  font-size: 10px;
+}
+
+.timestamp {
+  color: #6e6e6e;
+  font-size: 11px;
+}
+
+.article-title {
+  color: #e4e4e4;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.article-snippet {
+  color: #7a7a7a;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Read state — dimmer */
+.article-row.read .source-bar {
+  opacity: 0.3;
+}
+.article-row.read .source-name {
+  opacity: 0.5;
+}
+.article-row.read .article-title {
+  color: #6e6e6e;
+  font-weight: 400;
+}
+.article-row.read .article-snippet {
+  color: #444;
+}
+.article-row.read .timestamp {
+  color: #444;
+}
+
+/* ============================================================
+   StatusLine (vim-style mode line)
+   ============================================================ */
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #141414;
+  padding: 5px 16px;
+  font-size: 10px;
+  color: #6e6e6e;
+  border-top: 1px solid #1f1f1f;
+}
+
+.status-mode {
+  background: #5fafd7;
+  color: #0d0d0d;
+  font-weight: 700;
+  padding: 2px 8px;
+  letter-spacing: 0.5px;
+}
+
+.status-position {
+  color: #6e6e6e;
+}
+
+.status-context {
+  color: #444;
+  flex: 1;
+}
+
+.status-sync {
+  color: #6e6e6e;
+}
+
+/* ============================================================
+   BottomTabBar
+   ============================================================ */
+
+.tab-bar {
+  display: flex;
+  background: #0d0d0d;
+  border-top: 1px solid #1f1f1f;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+}
+
+.tab-button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: #6e6e6e;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 6px 4px;
+  transition: color 0.12s ease;
+}
+
+.tab-button.active {
+  color: #5fafd7;
+}
+
+.tab-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tab-label {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* ============================================================
+   Placeholder pages
+   ============================================================ */
+
+.placeholder {
+  align-items: flex-start;
+  padding: 24px 20px;
+  gap: 6px;
+}
+
+.placeholder-title {
+  color: #5fafd7;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.placeholder-text {
+  color: #7a7a7a;
+  font-size: 12px;
+}
+
+.placeholder-hint {
+  color: #444;
+  font-size: 11px;
+  margin-top: 12px;
+}

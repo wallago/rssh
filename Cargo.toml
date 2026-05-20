@@ -1,0 +1,36 @@
+[package]
+name = "rssh"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dioxus = "0.7.9"
+dioxus-fullstack = "0.7.9"
+direnv = "0.1.1"
+miniflux_api = "0.8.0"
+reqwest = "0.13.3"
+serde = { version = "1.0.228", features = ["derive"] }
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+
+[profile.dev]
+opt-level = 0
+debug = true
+panic = "abort"
+
+[profile.test]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+debug = false
+panic = "unwind"
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.bench]
+opt-level = 3
+debug = false
