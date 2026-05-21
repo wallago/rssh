@@ -7,9 +7,10 @@ use reqwest::Url;
 mod components;
 mod mock;
 mod pages;
+mod prelude;
+mod utils;
 
-use components::prelude::*;
-use pages::prelude::*;
+use crate::prelude::*;
 
 const STYLE: Asset = asset!("/assets/style.css");
 
@@ -29,10 +30,14 @@ fn main() {
 fn App() -> Element {
     let mut tab = use_signal(|| Tab::Inbox);
     use_context_provider(|| {
-        let url = Url::from_str(&env::var("URL").unwrap()).unwrap();
-        let usename = env::var("USERNAME").unwrap();
-        let passwd = env::var("PASSWORD").unwrap();
-        Arc::new(MinifluxApi::new(&url, usename, passwd))
+        let url = Url::from_str(env!("MINIFLUX_URL")).unwrap();
+        let usename = env!("MINIFLUX_USERNAME");
+        let passwd = env!("MINIFLUX_PASSWORD");
+        Arc::new(MinifluxApi::new(
+            &url,
+            usename.to_string(),
+            passwd.to_string(),
+        ))
     });
 
     rsx! {

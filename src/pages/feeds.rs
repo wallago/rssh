@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use dioxus::prelude::*;
 use miniflux_api::MinifluxApi;
-use miniflux_api::models::{Entry, EntryStatus};
 use reqwest::Client;
 
 use crate::components::prelude::*;
@@ -12,7 +11,7 @@ pub fn InboxPage() -> Element {
     let api = use_context::<Arc<MinifluxApi>>();
 
     let mut search = use_signal(String::new);
-    let mut filter = use_signal(|| Some(EntryStatus::Unread));
+    let mut filter = use_signal(|| Filter::All);
     let articles = use_resource(move || {
         let api = api.clone();
         async move {
@@ -33,7 +32,7 @@ pub fn InboxPage() -> Element {
         }
     });
 
-    let filtered: Vec<Article> = match *articles.read() {
+    let filtered: Vec<Article> = match &*articles.read() {
         Some(Ok(articles)) => articles.into_iter().map(Article::from).collect(),
         _ => Vec::new(),
     };
@@ -50,7 +49,7 @@ pub fn InboxPage() -> Element {
     //         || a.source.to_lowercase().contains(&q)
     // })
 
-    let unread_count: usize = match *articles.read() {
+    let unread_count: usize = match &*articles.read() {
         Some(Ok(articles)) => articles
             .into_iter()
             .filter(|a| !Article::from(*a).is_read)
@@ -66,7 +65,7 @@ pub fn InboxPage() -> Element {
     let position = format!("{}/{}", filtered.len(), article_count);
 
     let mut selected_id = use_signal(|| None::<String>);
-    let current_id = selected_id().or_else(|| filtered.first().map(|a| a.id));
+    let current_id = selected_id().or_else(|| filtered.first().map(|a| a.id.clone()));
 
     rsx! {
         div { class: "page inbox-page",
@@ -88,7 +87,7 @@ pub fn InboxPage() -> Element {
                 {filtered.iter().cloned().map(|article| {
                     let id = article.id.clone();
                     let id_for_click = id.clone();
-                    let is_selected = selected_id() == Some(id.clone());
+                    let is_selected = current_id.as_ref() == Some(&id);
                     rsx! {
                         ArticleRow {
                             key: "{id}",

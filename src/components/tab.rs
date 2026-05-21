@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::{Article, EntryStatus, Tab};
+use crate::Tab;
 
 #[component]
 pub fn BottomTabBar(current: Tab, on_change: EventHandler<Tab>) -> Element {

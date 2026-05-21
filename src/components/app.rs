@@ -1,5 +1,8 @@
 use dioxus::prelude::*;
 use miniflux_api::models::EntryStatus;
+use strum::IntoEnumIterator;
+
+use crate::components::article::Filter;
 
 #[component]
 pub fn AppHeader(unread_count: usize, synced_ago: String) -> Element {
@@ -31,42 +34,38 @@ pub fn SearchBar(value: String, on_input: EventHandler<String>) -> Element {
     }
 }
 
-// #[component]
-// pub fn FilterChips(
-//     current: Option<EntryStatus>,
-//     on_change: EventHandler<Option<EntryStatus>>,
-// ) -> Element {
-//     let chips = [("all", None), ("unread", Some(EntryStatus::Unread))];
-//     rsx! {
-//         div { class: "filter-chips",
-//             for (label, filter) in chips {
-//                 FilterChip {
-//                     key: "{label}",
-//                     label: label.to_string(),
-//                     is_active: current == filter,
-//                     on_click: move |_| on_change.call(filter),
-//                 }
-//             }
-//             span { class: "filter-add", "＋" }
-//         }
-//     }
-// }
-//
-// #[component]
-// fn FilterChip(label: String, is_active: bool, on_click: EventHandler<()>) -> Element {
-//     let class = if is_active {
-//         "filter-chip active"
-//     } else {
-//         "filter-chip"
-//     };
-//     rsx! {
-//         span {
-//             class: "{class}",
-//             onclick: move |_| on_click.call(()),
-//             "{label}"
-//         }
-//     }
-// }
+#[component]
+pub fn FilterChips(current: Filter, on_change: EventHandler<Filter>) -> Element {
+    rsx! {
+        div { class: "filter-chips",
+            for filter in Filter::iter() {
+                FilterChip {
+                    key: "{filter.to_string()}",
+                    label: filter.to_string(),
+                    is_active: current == filter,
+                    on_click: move |_| on_change.call(filter),
+                }
+            }
+            span { class: "filter-add", "＋" }
+        }
+    }
+}
+
+#[component]
+fn FilterChip(label: String, is_active: bool, on_click: EventHandler<()>) -> Element {
+    let class = if is_active {
+        "filter-chip active"
+    } else {
+        "filter-chip"
+    };
+    rsx! {
+        span {
+            class: "{class}",
+            onclick: move |_| on_click.call(()),
+            "{label}"
+        }
+    }
+}
 
 #[component]
 pub fn StatusLine(mode: String, position: String, context: String, last_sync: String) -> Element {

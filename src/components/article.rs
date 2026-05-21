@@ -1,7 +1,10 @@
-use dioxus::{html::article, prelude::*};
+use dioxus::prelude::*;
 use miniflux_api::models::{Entry, EntryStatus};
+use strum::EnumIter;
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+use crate::utils::string_to_color;
+
+#[derive(Clone, Copy, PartialEq, Debug, EnumIter, strum::Display)]
 pub enum Filter {
     All,
     Unread,
@@ -21,16 +24,16 @@ pub struct Article {
     pub is_starred: bool,
 }
 
-impl From<Entry> for Article {
-    fn from(entry: Entry) -> Self {
+impl From<&Entry> for Article {
+    fn from(entry: &Entry) -> Self {
         let read_status: &str = EntryStatus::Read.into();
         Article {
             id: entry.id.to_string(),
-            source: entry.feed.title,
-            source_color: String::from("#FFFFFF"),
-            title: entry.title,
-            snippet: entry.content,
-            timestamp: entry.published_at,
+            source: entry.feed.title.clone(),
+            source_color: string_to_color(&entry.feed.title),
+            title: entry.title.clone(),
+            snippet: entry.content.clone(),
+            timestamp: entry.published_at.clone(),
             is_read: entry.status == read_status,
             is_starred: entry.starred,
         }
