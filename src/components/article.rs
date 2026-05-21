@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{html::article, prelude::*};
 use miniflux_api::models::{Entry, EntryStatus};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -21,10 +21,25 @@ pub struct Article {
     pub is_starred: bool,
 }
 
+impl From<Entry> for Article {
+    fn from(entry: Entry) -> Self {
+        let read_status: &str = EntryStatus::Read.into();
+        Article {
+            id: entry.id.to_string(),
+            source: entry.feed.title,
+            source_color: String::from("#FFFFFF"),
+            title: entry.title,
+            snippet: entry.content,
+            timestamp: entry.published_at,
+            is_read: entry.status == read_status,
+            is_starred: entry.starred,
+        }
+    }
+}
+
 #[component]
-pub fn ArticleRow(article: Entry, is_selected: bool, on_click: EventHandler<()>) -> Element {
-    let read_status: &str = EntryStatus::Read.into();
-    let class = match (is_selected, article.status == read_status) {
+pub fn ArticleRow(article: Article, is_selected: bool, on_click: EventHandler<()>) -> Element {
+    let class = match (is_selected, article.is_read) {
         (true, true) => "article-row selected read",
         (true, false) => "article-row selected",
         (false, true) => "article-row read",
@@ -38,25 +53,25 @@ pub fn ArticleRow(article: Entry, is_selected: bool, on_click: EventHandler<()>)
 
             div {
                 class: "source-bar",
-            //     style: "background-color: {article.source_color}",
+                style: "background-color: {article.source_color}",
             }
 
             div { class: "article-content",
                 div { class: "article-meta",
                     span {
                         class: "source-name",
-                        // style: "color: {article.source_color}",
-                        "{article.url}"
+                        style: "color: {article.source_color}",
+                        "{article.source}"
                     }
                     div { class: "meta-right",
-                        if article.starred {
+                        if article.is_starred {
                             span { class: "star", "★" }
                         }
-                        span { class: "timestamp", "{article.published_at}" }
+                        span { class: "timestamp", "{article.timestamp}" }
                     }
                 }
                 div { class: "article-title", "{article.title}" }
-                div { class: "article-snippet", "{article.content}" }
+                div { class: "article-snippet", "{article.snippet}" }
             }
         }
     }

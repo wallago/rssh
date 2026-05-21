@@ -33,8 +33,8 @@ pub fn InboxPage() -> Element {
         }
     });
 
-    let filtered: Vec<Entry> = match &*articles.read() {
-        Some(Ok(articles)) => articles.iter().cloned().collect(),
+    let filtered: Vec<Article> = match *articles.read() {
+        Some(Ok(articles)) => articles.into_iter().map(Article::from).collect(),
         _ => Vec::new(),
     };
     // .filter(|a| match filter() {
@@ -50,13 +50,10 @@ pub fn InboxPage() -> Element {
     //         || a.source.to_lowercase().contains(&q)
     // })
 
-    let unread_count: usize = match &*articles.read() {
+    let unread_count: usize = match *articles.read() {
         Some(Ok(articles)) => articles
-            .iter()
-            .filter(|a| {
-                let unread_status: &str = EntryStatus::Unread.into();
-                a.status == unread_status
-            })
+            .into_iter()
+            .filter(|a| !Article::from(*a).is_read)
             .count(),
         _ => 0,
     };
@@ -67,10 +64,9 @@ pub fn InboxPage() -> Element {
     };
 
     let position = format!("{}/{}", filtered.len(), article_count);
-    let mut selected_id = use_signal(|| match &*articles.read() {
-        Some(Ok(articles)) => Some(articles.first().unwrap().id),
-        _ => None,
-    });
+
+    let mut selected_id = use_signal(|| None::<String>);
+    let current_id = selected_id().or_else(|| filtered.first().map(|a| a.id));
 
     rsx! {
         div { class: "page inbox-page",
@@ -82,10 +78,10 @@ pub fn InboxPage() -> Element {
                 value: search(),
                 on_input: move |v| search.set(v),
             }
-            // FilterChips {
-            //     current: filter(),
-            //     on_change: move |f| filter.set(f),
-            // }
+            FilterChips {
+                current: filter(),
+                on_change: move |f| filter.set(f),
+            }
             div { class: "divider" }
 
             div { class: "article-list",
