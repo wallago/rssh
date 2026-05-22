@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
 
-use crate::components::prelude::*;
-
 #[component]
 pub fn SavedPage() -> Element {
     rsx! {

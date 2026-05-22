@@ -33,7 +33,7 @@ impl From<&Entry> for Article {
             source_color: string_to_color(&entry.feed.title),
             title: entry.title.clone(),
             snippet: entry.content.clone(),
-            timestamp: entry.published_at.clone(),
+            timestamp: entry.created_at.clone(),
             is_read: entry.status == read_status,
             is_starred: entry.starred,
         }

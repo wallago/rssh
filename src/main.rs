@@ -1,8 +1,9 @@
-use std::{env, str::FromStr, sync::Arc};
+use std::{env, rc::Rc, str::FromStr, sync::Arc};
 
 use dioxus::prelude::*;
 use miniflux_api::MinifluxApi;
 use reqwest::Url;
+use rusqlite::{Connection, Result, params};
 
 mod components;
 mod mock;
@@ -29,6 +30,12 @@ fn main() {
 #[component]
 fn App() -> Element {
     let mut tab = use_signal(|| Tab::Inbox);
+
+    use_context_provider(|| {
+        let conn = Connection::open(dirs::cache_dir().unwrap()).unwrap();
+        Rc::new(conn)
+    });
+
     use_context_provider(|| {
         let url = Url::from_str(env!("MINIFLUX_URL")).unwrap();
         let usename = env!("MINIFLUX_USERNAME");

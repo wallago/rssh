@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use miniflux_api::models::EntryStatus;
 use strum::IntoEnumIterator;
 
 use crate::components::article::Filter;
