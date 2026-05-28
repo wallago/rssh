@@ -16,6 +16,10 @@ run *ARGS:
 emulator:
     emulator -avd medium_phone
 
+# Setup emulator 
+emulator-setup:
+    avdmanager create avd -n medium_phone -k "system-images;android-34;google_apis;x86_64" -d "medium_phone"
+
 # ── Quality ───────────────────────────────────────────────────
 
 # Run all tests with nextest

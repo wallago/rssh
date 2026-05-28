@@ -1,0 +1,22 @@
+.placeholder {
+  align-items: flex-start;
+  padding: 24px 20px;
+  gap: 6px;
+}
+
+.placeholder-title {
+  color: #5fafd7;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.placeholder-text {
+  color: #7a7a7a;
+  font-size: 12px;
+}
+
+.placeholder-hint {
+  color: #444;
+  font-size: 11px;
+  margin-top: 12px;
+}

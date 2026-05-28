@@ -1,0 +1,29 @@
+.app-header {
+  padding: 16px 20px 10px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-title {
+  color: #5fafd7;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #87d75f;
+  box-shadow: 0 0 6px rgba(135, 215, 95, 0.5);
+}
+
+.header-meta {
+  margin-top: 4px;
+  color: #6e6e6e;
+  font-size: 11px;
+}

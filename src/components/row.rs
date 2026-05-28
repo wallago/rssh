@@ -27,43 +27,46 @@ pub fn CategoryRow(
     let offset = dx();
 
     rsx! {
-        div {
-            class: "{class}",
-            onpointerdown: move |e| {
-                let p = e.client_coordinates();
-                start.set((p.x, p.y));
-                horizontal.set(false);
-                moved.set(false);
-            },
-            onpointermove: move |e| {
-                let (sx, sy) = start();
-                let p = e.client_coordinates();
-                let (mx, my) = (p.x - sx, p.y - sy);
-                if !horizontal() && mx.abs() > 8.0 && mx.abs() > my.abs() {
-                    horizontal.set(true);
-                }
-                if horizontal() {
-                    moved.set(true);
-                    // clamp to left-only swipe (no right action on category rows)
-                    dx.set(mx.min(0.0));
-                }
-            },
-            onpointerup: move |_| {
-                if dx() <= -threshold { on_swipe_left.call(()); }
-                dx.set(0.0);
-                horizontal.set(false);
-            },
-            onclick: move |_| {
-                if moved() { return; }
-                on_click.call(())
-            },
+        div { class: "swipe-row",
+            div { class: "swipe-action swipe-action-right", "Read" }
+            div {
+                class: "{class}",
+                style: "transform: translateX({offset}px)",
+                onpointerdown: move |e| {
+                    let p = e.client_coordinates();
+                    start.set((p.x, p.y));
+                    horizontal.set(false);
+                    moved.set(false);
+                },
+                onpointermove: move |e| {
+                    let (sx, sy) = start();
+                    let p = e.client_coordinates();
+                    let (mx, my) = (p.x - sx, p.y - sy);
+                    if !horizontal() && mx.abs() > 8.0 && mx.abs() > my.abs() {
+                        horizontal.set(true);
+                    }
+                    if horizontal() {
+                        moved.set(true);
+                        dx.set(mx.min(0.0));
+                    }
+                },
+                onpointerup: move |_| {
+                    if dx() <= -threshold { on_swipe_left.call(()); }
+                    dx.set(0.0);
+                    horizontal.set(false);
+                },
+                onclick: move |_| {
+                    if moved() { return; }
+                    on_click.call(())
+                },
 
-            div { class: "row-content",
-                span { class: "chevron", "{chevron}" }
-                span { class: "row-title", "{category.label}" }
-                div { class: "row-meta",
-                    if let Some(count) = count {
-                        span { class: "unread-count", "{count}" }
+                div { class: "row-content",
+                    span { class: "chevron", "{chevron}" }
+                    span { class: "row-title", "{category.label}" }
+                    div { class: "row-meta",
+                        if let Some(count) = count {
+                            span { class: "unread-count", "{count}" }
+                        }
                     }
                 }
             }
@@ -94,47 +97,49 @@ pub fn FeedRow(
     let offset = dx();
 
     rsx! {
-        div {
-            class: "{class}",
-            style: "transform: translateX({offset}px)",
-            onpointerdown: move |e| {
-                let p = e.client_coordinates();
-                start.set((p.x, p.y));
-                horizontal.set(false);
-                moved.set(false);
-            },
-            onpointermove: move |e| {
-                let (sx, sy) = start();
-                let p = e.client_coordinates();
-                let (mx, my) = (p.x - sx, p.y - sy);
-                if !horizontal() && mx.abs() > 8.0 && mx.abs() > my.abs() {
-                    horizontal.set(true);
-                }
-                if horizontal() {
-                    moved.set(true);
-                    // clamp to left-only swipe (no right action on category rows)
-                    dx.set(mx.min(0.0));
-                }
-            },
-            onpointerup: move |_| {
-                if dx() <= -threshold { on_swipe_left.call(()); }
-                dx.set(0.0);
-                horizontal.set(false);
-            },
-            onclick: move |_| {
-                if moved() { return; }
-                on_click.call(())
-            },
-
-            div { class: "row-content",
-                span { class: "chevron", "{chevron}" }
-                span { class: "row-title", "{feed.label}" }
-                div { class: "row-meta",
-                    if feed.error_count > 0 {
-                        span { class: "feed-error", title: "Feed has fetch errors", "⚠" }
+        div { class: "swipe-row",
+            div { class: "swipe-action swipe-action-right", "Read" }
+            div {
+                class: "{class}",
+                style: "transform: translateX({offset}px)",
+                onpointerdown: move |e| {
+                    let p = e.client_coordinates();
+                    start.set((p.x, p.y));
+                    horizontal.set(false);
+                    moved.set(false);
+                },
+                onpointermove: move |e| {
+                    let (sx, sy) = start();
+                    let p = e.client_coordinates();
+                    let (mx, my) = (p.x - sx, p.y - sy);
+                    if !horizontal() && mx.abs() > 8.0 && mx.abs() > my.abs() {
+                        horizontal.set(true);
                     }
-                    if let Some(count) = count {
-                        span { class: "unread-count", "{count}" }
+                    if horizontal() {
+                        moved.set(true);
+                        dx.set(mx.min(0.0));
+                    }
+                },
+                onpointerup: move |_| {
+                    if dx() <= -threshold { on_swipe_left.call(()); }
+                    dx.set(0.0);
+                    horizontal.set(false);
+                },
+                onclick: move |_| {
+                    if moved() { return; }
+                    on_click.call(())
+                },
+
+                div { class: "row-content",
+                    span { class: "chevron", "{chevron}" }
+                    span { class: "row-title", "{feed.label}" }
+                    div { class: "row-meta",
+                        if feed.error_count > 0 {
+                            span { class: "feed-error", title: "Feed has fetch errors", "⚠" }
+                        }
+                        if let Some(count) = count {
+                            span { class: "unread-count", "{count}" }
+                        }
                     }
                 }
             }

@@ -1,0 +1,36 @@
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-action {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 20px;
+  background: #2d6cdf; /* tweak to taste */
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  pointer-events: none; /* never intercepts touches */
+}
+
+.swipe-action-right {
+  left: 50%;
+  right: 0;
+  justify-content: flex-end;
+  background: #2d6cdf; /* "Read" — same as before */
+}
+
+.swipe-action-left {
+  left: 0;
+  right: 50%;
+  justify-content: flex-start;
+  background: #c39000; /* amber for star — pick your color */
+  font-size: 16px;
+}

@@ -1,0 +1,26 @@
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+}
+
+.search-prompt {
+  color: #5fafd7;
+  font-size: 13px;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e4e4e4;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0;
+}
+
+.search-input::placeholder {
+  color: #444;
+}

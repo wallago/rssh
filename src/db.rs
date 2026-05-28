@@ -1,9 +1,21 @@
+use std::sync::Arc;
+
+use futures::lock::Mutex;
 use rusqlite::{Connection, params};
 
 use crate::{
     prelude::{Article, Category, Feed},
     utils::string_to_color,
 };
+
+pub fn get_db_conn() -> Option<Arc<Mutex<Connection>>> {
+    let app_name = env!("CARGO_PKG_NAME");
+    let dir = dirs::data_dir()?;
+    std::fs::create_dir_all(&dir).ok()?;
+    let conn = Connection::open(dir.join(format!("{app_name}.db")))?;
+    init_schema(&conn).expect("init schema");
+    Some(Arc::new(Mutex::new(conn)))
+}
 
 pub fn init_schema(conn: &Connection) -> rusqlite::Result<()> {
     conn.execute_batch(
@@ -175,7 +187,6 @@ fn make_snippet(html: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ");
     let cleaned: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
-
     let mut chars = cleaned.chars();
     let head: String = chars.by_ref().take(140).collect();
     if chars.next().is_some() {

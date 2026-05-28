@@ -1,0 +1,37 @@
+.toast {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #141414;
+  border: 1px solid #1f1f1f;
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #cfcfcf;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  z-index: 1000;
+  animation: toast-in 0.18s ease-out;
+  pointer-events: none;
+}
+.toast-dot {
+  width: 7px;
+  height: 7px;
+  background: #5fafd7;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(95, 175, 215, 0.6);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

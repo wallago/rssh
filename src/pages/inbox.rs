@@ -88,19 +88,21 @@ fn CategoryNodeView(node: CategoryNode) -> Element {
             expanded: node.expanded,
             on_click: {
                 let id = node.category.id.clone();
-                move |_| toggle_category(tree, &id)
-            }
+                move |_| {
+                    toggle_category(tree, &id)
+                }
+            },
             on_swipe_left: {
-                let id = node.category.id.clone();
+                let node = node.clone();
                 let api    = api.clone();
                 let db     = db.clone();
                 move |_| {
                     let api    = api.clone();
                     let db     = db.clone();
-                    let id = id.clone();
+                    let node = node.clone();
                     spawn(async move {
-                        mark_category_read(api, db, id.clone()).await;
-                        set_category_articles_read(tree, id);
+                        mark_category_read(api, db, node.clone()).await;
+                        set_category_articles_read(tree, node);
                     });
                 }
             },
@@ -150,16 +152,16 @@ fn FeedNodeView(node: FeedNode, id: String) -> Element {
             expanded: node.expanded,
             on_click: move |_| toggle_feed(tree, &id, &feed_id),
             on_swipe_left: {
-                let id = node.feed.id.clone();
+                let node = node.clone();
                 let api    = api.clone();
                 let db     = db.clone();
                 move |_| {
                     let api    = api.clone();
                     let db     = db.clone();
-                    let id = id.clone();
+                    let node = node.clone();
                     spawn(async move {
-                        mark_category_read(api, db, id.clone()).await;
-                        set_category_articles_read(tree, id);
+                        mark_feed_read(api, db, node.clone()).await;
+                        set_feed_articles_read(tree, node);
                     });
                 }
             },

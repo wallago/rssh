@@ -1,0 +1,41 @@
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.pulse {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px 12px 16px;
+  border-bottom: 1px solid #1f1f1f;
+  gap: 10px;
+}
+.skeleton-bar {
+  height: 10px;
+  background: #1f1f1f;
+  border-radius: 3px;
+}
+.skeleton-bar.short {
+  width: 28%;
+}
+.skeleton-bar.medium {
+  width: 55%;
+}
+.skeleton-bar.long {
+  width: 82%;
+}
+.skeleton-row .skeleton-source-bar {
+  width: 3px;
+  align-self: stretch;
+  background: #1f1f1f;
+  border-radius: 1px;
+  margin-right: 8px;
+}
