@@ -10,7 +10,11 @@ watch:
 
 # Run the project
 run *ARGS:
-    cargo run -- {{ARGS}}
+    dx serve --android -- {{ARGS}}
+
+# Run emulator
+emulator:
+    emulator -avd medium_phone
 
 # ── Quality ───────────────────────────────────────────────────
 
@@ -56,13 +60,9 @@ ci-nix:
 
 # ── Build ─────────────────────────────────────────────────────
 
-# Build release binary via Nix
-build:
-    nix build
-
-# Build release binary via cargo
-build-cargo:
-    cargo build --release
+# Build release APK via dx
+build-apk:
+    dx bundle --android --package-types apk --release --target aarch64-linux-android
 
 # ── Analysis ──────────────────────────────────────────────────
 
@@ -106,6 +106,7 @@ commit-check:
 
 
 # ── Nix ────────────────────────────────────────────────────────
+
 # Update every flake input
 update:
     nix flake update

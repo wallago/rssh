@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use strum::IntoEnumIterator;
 
-use crate::components::article::Filter;
+use rssh::prelude::Filter;
 
 #[component]
 pub fn AppHeader(unread_count: usize, synced_ago: String) -> Element {

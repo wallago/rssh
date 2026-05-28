@@ -1,11 +1,5 @@
-mod feeds;
-mod inbox;
-mod saved;
-mod settings;
-
-pub mod prelude {
-    pub use super::feeds::*;
-    pub use super::inbox::*;
-    pub use super::saved::*;
-    pub use super::settings::*;
-}
+pub mod feeds;
+pub mod inbox;
+pub mod reader;
+pub mod saved;
+pub mod settings;

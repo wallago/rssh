@@ -1,17 +1,29 @@
-use std::{env, rc::Rc, str::FromStr, sync::Arc};
+use std::{
+    env,
+    rc::Rc,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 
 use dioxus::prelude::*;
+use dioxus_router::RouterConfig;
+use dioxus_web::WebHistory;
 use miniflux_api::MinifluxApi;
 use reqwest::Url;
 use rusqlite::{Connection, Result, params};
 
-mod components;
-mod mock;
-mod pages;
-mod prelude;
-mod utils;
+use crate::{
+    components::{tab::BottomTabBar, toast::Toast},
+    pages::{
+        feeds::FeedsPage, inbox::InboxPage, reader::ReaderPage, saved::SavedPage,
+        settings::SettingsPage,
+    },
+};
 
-use crate::prelude::*;
+use rssh::prelude::*;
+
+mod components;
+mod pages;
 
 const STYLE: Asset = asset!("/assets/style.css");
 
@@ -23,21 +35,33 @@ pub enum Tab {
     Settings,
 }
 
+#[derive(Routable, Clone, PartialEq)]
+enum Route {
+    #[route("/")]
+    InboxPage {},
+    #[route("/article/:id")]
+    ReaderPage { id: String },
+}
+
 fn main() {
     dioxus::launch(App);
 }
 
 #[component]
 fn App() -> Element {
-    let mut tab = use_signal(|| Tab::Inbox);
-
     use_context_provider(|| {
-        let conn = Connection::open(dirs::cache_dir().unwrap()).unwrap();
-        Rc::new(conn)
+        let app_name = env!("CARGO_PKG_NAME");
+        let dir = dirs::data_dir().unwrap_or_else(std::env::temp_dir);
+        std::fs::create_dir_all(&dir).ok();
+        let conn =
+            Connection::open(dir.join(format!("{app_name}.db"))).expect("failed to open rssh.db");
+        init_schema(&conn).expect("init schema");
+        Arc::new(Mutex::new(conn))
     });
 
     use_context_provider(|| {
-        let url = Url::from_str(env!("MINIFLUX_URL")).unwrap();
+        let url =
+            Url::from_str(env!("MINIFLUX_URL")).expect("failed to parse MINIFLUX_URL into URL");
         let usename = env!("MINIFLUX_USERNAME");
         let passwd = env!("MINIFLUX_PASSWORD");
         Arc::new(MinifluxApi::new(
@@ -47,21 +71,39 @@ fn App() -> Element {
         ))
     });
 
+    let mut tree: Signal<Load<Vec<CategoryNode>>> = use_signal(|| Load::Idle);
+    let syncing: Signal<bool> = use_signal(|| false);
+    use_context_provider(|| syncing);
+    use_context_provider(|| tree);
+
+    let api = use_context::<Arc<MinifluxApi>>();
+    let db = use_context::<Arc<Mutex<Connection>>>();
+
+    use_future(move || {
+        let api = api.clone();
+        let db = db.clone();
+        let mut syncing = syncing;
+        async move {
+            syncing.set(true);
+            // scope the lock so the guard is dropped BEFORE the await
+            let empty = { is_empty(&db.lock().unwrap()).unwrap_or(true) };
+            if empty {
+                let _ = initial_sync(api, db.clone()).await;
+            }
+            // now build the tree from SQLite (sync reads), not the network
+            let conn = db.lock().unwrap();
+            let cats = load_categories(&conn).expect("fail to laod categories from DB");
+            let feeds = load_feeds(&conn).expect("fail to laod feeds from DB");
+            let articles = load_articles(&conn).expect("fail to laod articles from DB");
+            drop(conn);
+            tree.set(Load::Ready(build_tree(cats, feeds, articles)));
+            syncing.set(false);
+        }
+    });
+
     rsx! {
         document::Stylesheet { href: STYLE }
-        div { class: "app",
-            main { class: "app-main",
-                match tab() {
-                    Tab::Inbox => rsx! { InboxPage {} },
-                    Tab::Feeds => rsx! { FeedsPage {} },
-                    Tab::Saved => rsx! { SavedPage {} },
-                    Tab::Settings => rsx! { SettingsPage {} },
-                }
-            }
-            BottomTabBar {
-                current: tab(),
-                on_change: move |t| tab.set(t),
-            }
-        }
+        Toast {}
+        Router::<Route> {}
     }
 }

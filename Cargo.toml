@@ -4,11 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-dioxus = "0.7.9"
+anyhow = "1.0.102"
+dioxus = { version = "0.7.9", features = ["router"] }
 dioxus-fullstack = "0.7.9"
+dioxus-web = "0.7.9"
 dirs = "6.0.0"
 miniflux_api = "0.8.0"
-reqwest = "0.13.3"
+reqwest = { version = "0.13.3", features = ["native-tls"] }
 rusqlite = { version = "0.39.0", features = ["bundled"] }
 serde = { version = "1.0.228", features = ["derive"] }
 strum = { version = "0.28.0", features = ["derive"] }

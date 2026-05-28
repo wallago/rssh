@@ -76,20 +76,21 @@
           };
         claude = claude-code.packages.${system}.default;
 
-        # ── Android helper ──────────────────────────────────────────
-        # androidComposition = pkgs.androidenv.composeAndroidPackages {
-        #   abiVersions = [ "x86_64" ];
-        #   includeNDK = true;
-        #   ndkVersions = [ "25.2.9519653" ];
-        #   platformVersions = [ "34" ];
-        #   platformToolsVersion = "34.0.0";
-        #   toolsVersion = "26.1.1";
-        #   buildToolsVersions = [ "34.0.0" ];
-        #   includeEmulator = true;
-        #   includeSystemImages = true;
-        #   systemImageTypes = [ "google_apis" ];
-        # };
-        # androidSdk = androidComposition.androidsdk;
+        # ── Android SDK + NDK ─────────────────────────────────────
+        androidComposition = pkgs.androidenv.composeAndroidPackages {
+          includeNDK = true;
+          platformVersions = [ "34" ];
+          ndkVersions = [ "29.0.14206865" ];
+          buildToolsVersions = [ "34.0.0" ];
+          includeEmulator = true;
+          includeSystemImages = true;
+          systemImageTypes = [ "google_apis" ];
+          abiVersions = [ "x86_64" ];
+        };
+        androidSdk = androidComposition.androidsdk;
+        androidSdkRoot = "${androidSdk}/libexec/android-sdk";
+        ndkVersion = "29.0.14206865";
+        jdk = pkgs.jdk25;
       in
       rec {
         # ── Packages ──────────────────────────────────────────────
@@ -97,6 +98,12 @@
           rssh = buildApp { release = true; };
           rssh-debug = buildApp { release = false; };
           default = rssh;
+          android-emulator = pkgs.androidenv.emulateApp {
+            name = "emulate";
+            platformVersion = "34";
+            abiVersion = "x86_64";
+            systemImageType = "google_apis";
+          };
         };
 
         # ── Checks (nix flake check) ─────────────────────────────
@@ -111,19 +118,15 @@
             wasm-bindgen-cli
             dioxus-cli
             claude
-            # androidSdk
-            androidenv.androidPkgs.androidsdk
+            androidSdk
+            jdk
           ];
-          # shellHook = ''
-          #   export JAVA_HOME=${pkgs.jdk17}
-          #   export QT_QPA_PLATFORM="xcb"
-          #   export QT_PLUGIN_PATH="${pkgs.qt5.qtbase}/lib/qt-5.15/plugins"
-          #   export LIBGL_ALWAYS_SOFTWARE=1
-          #   export ANDROID_SDK_ROOT="${androidSdk}/libexec/android-sdk"
-          #   export ANDROID_NDK_HOME="${androidSdk}/libexec/android-sdk/ndk-bundle"
-          #   export NDK_HOME="$ANDROID_NDK_HOME"
-          #   export NDK_HOME_TOOLCHAIN_BIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          # '';
+          ANDROID_HOME = androidSdkRoot;
+          ANDROID_SDK_ROOT = androidSdkRoot;
+          ANDROID_NDK_HOME = "${androidSdkRoot}/ndk/${ndkVersion}";
+          ANDROID_NDK_ROOT = "${androidSdkRoot}/ndk/${ndkVersion}";
+          JAVA_HOME = "${jdk.home}";
+          GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidSdkRoot}/build-tools/34.0.0/aapt2";
         };
       }
     );
