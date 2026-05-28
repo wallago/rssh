@@ -369,9 +369,10 @@ body {
 
 .category-row,
 .feed-row {
+  font-weight: 900;
   position: relative;
   display: flex;
-  padding: 10px 20px 10px 16px;
+  padding: 15px 20px 15px 16px;
   border-bottom: 1px solid #1f1f1f;
   cursor: pointer;
   transition: background 0.12s ease;
@@ -402,8 +403,9 @@ body {
 
 .chevron {
   color: #6e6e6e;
-  font-size: 10px;
+  font-size: 15px;
   width: 10px;
+  margin-right: 6px;
   flex-shrink: 0;
 }
 
@@ -415,7 +417,7 @@ body {
 .row-title {
   flex: 1;
   color: #e4e4e4;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;

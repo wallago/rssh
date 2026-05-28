@@ -1,0 +1,31 @@
+[application]
+name = "rssh"
+
+# ---------- Bundle (cross-platform defaults) ----------
+[bundle]
+identifier = "com.wallago.rssh"
+publisher = "wallago"
+copyright = "Copyright © 2026 wallago"
+category = "News"
+short_description = "Miniflux RSS client"
+long_description = "A minimal RSS reader that syncs with a self-hosted Miniflux server."
+icon = ["assets/icon.png"]
+
+# ---------- Android-specific ----------
+[android]
+min_sdk = 24
+target_sdk = 34
+compile_sdk = 34
+
+# [android.signing]
+# jks_file     = "keystore.jks"
+# jks_password = "…"
+# key_alias    = "rssh"
+# key_password = "…"
+
+# ---------- Permissions ----------
+[permissions]
+
+[android.permissions]
+"android.permission.INTERNET" = { description = "Sync articles from the Miniflux server" }
+"android.permission.ACCESS_NETWORK_STATE" = { description = "Detect online/offline state to gate sync" }

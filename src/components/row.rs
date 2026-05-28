@@ -10,6 +10,7 @@ pub fn CategoryRow(
     count: Option<i64>,
     expanded: bool,
     on_click: EventHandler<()>,
+    on_swipe_left: EventHandler<()>,
 ) -> Element {
     let class = if expanded {
         "category-row expanded"
@@ -18,10 +19,44 @@ pub fn CategoryRow(
     };
     let chevron = if expanded { "▼" } else { "▶" };
 
+    let mut start = use_signal(|| (0.0_f64, 0.0_f64));
+    let mut dx = use_signal(|| 0.0_f64);
+    let mut horizontal = use_signal(|| false);
+    let mut moved = use_signal(|| false);
+    let threshold = 100.0;
+    let offset = dx();
+
     rsx! {
         div {
             class: "{class}",
-            onclick: move |_| on_click.call(()),
+            onpointerdown: move |e| {
+                let p = e.client_coordinates();
+                start.set((p.x, p.y));
+                horizontal.set(false);
+                moved.set(false);
+            },
+            onpointermove: move |e| {
+                let (sx, sy) = start();
+                let p = e.client_coordinates();
+                let (mx, my) = (p.x - sx, p.y - sy);
+                if !horizontal() && mx.abs() > 8.0 && mx.abs() > my.abs() {
+                    horizontal.set(true);
+                }
+                if horizontal() {
+                    moved.set(true);
+                    // clamp to left-only swipe (no right action on category rows)
+                    dx.set(mx.min(0.0));
+                }
+            },
+            onpointerup: move |_| {
+                if dx() <= -threshold { on_swipe_left.call(()); }
+                dx.set(0.0);
+                horizontal.set(false);
+            },
+            onclick: move |_| {
+                if moved() { return; }
+                on_click.call(())
+            },
 
             div { class: "row-content",
                 span { class: "chevron", "{chevron}" }
@@ -42,6 +77,7 @@ pub fn FeedRow(
     count: Option<i64>,
     expanded: bool,
     on_click: EventHandler<()>,
+    on_swipe_left: EventHandler<()>,
 ) -> Element {
     let class = if expanded {
         "feed-row expanded"
@@ -50,10 +86,45 @@ pub fn FeedRow(
     };
     let chevron = if expanded { "▼" } else { "▶" };
 
+    let mut start = use_signal(|| (0.0_f64, 0.0_f64));
+    let mut dx = use_signal(|| 0.0_f64);
+    let mut horizontal = use_signal(|| false);
+    let mut moved = use_signal(|| false);
+    let threshold = 100.0;
+    let offset = dx();
+
     rsx! {
         div {
             class: "{class}",
-            onclick: move |_| on_click.call(()),
+            style: "transform: translateX({offset}px)",
+            onpointerdown: move |e| {
+                let p = e.client_coordinates();
+                start.set((p.x, p.y));
+                horizontal.set(false);
+                moved.set(false);
+            },
+            onpointermove: move |e| {
+                let (sx, sy) = start();
+                let p = e.client_coordinates();
+                let (mx, my) = (p.x - sx, p.y - sy);
+                if !horizontal() && mx.abs() > 8.0 && mx.abs() > my.abs() {
+                    horizontal.set(true);
+                }
+                if horizontal() {
+                    moved.set(true);
+                    // clamp to left-only swipe (no right action on category rows)
+                    dx.set(mx.min(0.0));
+                }
+            },
+            onpointerup: move |_| {
+                if dx() <= -threshold { on_swipe_left.call(()); }
+                dx.set(0.0);
+                horizontal.set(false);
+            },
+            onclick: move |_| {
+                if moved() { return; }
+                on_click.call(())
+            },
 
             div { class: "row-content",
                 span { class: "chevron", "{chevron}" }

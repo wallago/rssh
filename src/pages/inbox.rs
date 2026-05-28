@@ -37,7 +37,6 @@ pub fn InboxPage() -> Element {
                 },
                 synced_ago: String::new()
             }
-            FilterChips {}
             { match tree() {
                 Load::Idle | Load::Loading => rsx! {
                    div { class: "tree",
@@ -65,6 +64,8 @@ pub fn InboxPage() -> Element {
 fn CategoryNodeView(node: CategoryNode) -> Element {
     let tree = use_context::<Signal<Load<Vec<CategoryNode>>>>();
     let filter = use_context::<Signal<Filter>>();
+    let api = use_context::<Arc<MinifluxApi>>();
+    let db = use_context::<Arc<Mutex<Connection>>>();
 
     rsx! {
         CategoryRow {
@@ -89,6 +90,20 @@ fn CategoryNodeView(node: CategoryNode) -> Element {
                 let id = node.category.id.clone();
                 move |_| toggle_category(tree, &id)
             }
+            on_swipe_left: {
+                let id = node.category.id.clone();
+                let api    = api.clone();
+                let db     = db.clone();
+                move |_| {
+                    let api    = api.clone();
+                    let db     = db.clone();
+                    let id = id.clone();
+                    spawn(async move {
+                        mark_category_read(api, db, id.clone()).await;
+                        set_category_articles_read(tree, id);
+                    });
+                }
+            },
         }
         if node.expanded {
             div { class: "feed-list",
@@ -134,6 +149,20 @@ fn FeedNodeView(node: FeedNode, id: String) -> Element {
             },
             expanded: node.expanded,
             on_click: move |_| toggle_feed(tree, &id, &feed_id),
+            on_swipe_left: {
+                let id = node.feed.id.clone();
+                let api    = api.clone();
+                let db     = db.clone();
+                move |_| {
+                    let api    = api.clone();
+                    let db     = db.clone();
+                    let id = id.clone();
+                    spawn(async move {
+                        mark_category_read(api, db, id.clone()).await;
+                        set_category_articles_read(tree, id);
+                    });
+                }
+            },
         }
         if node.expanded {
             div { class: "article-list",

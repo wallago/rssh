@@ -8,6 +8,7 @@ use dioxus::{
     html::article,
     signals::{Signal, WritableExt},
 };
+use futures::future::join_all;
 use miniflux_api::{ApiError, MinifluxApi};
 use reqwest::Client;
 use rusqlite::{Connection, params};
@@ -255,4 +256,105 @@ pub fn sibling_article(
         }
     }
     None
+}
+
+pub async fn mark_feed_read(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>, node: FeedNode) {
+    {
+        db.lock()
+            .unwrap()
+            .execute(
+                "UPDATE entries SET status='read' WHERE feed_id=?1",
+                params![node.feed.id],
+            )
+            .ok();
+    }
+
+    let id = node.feed.id.parse::<i64>().unwrap_or_default();
+    let Load::Ready(articles) = node.articles else {
+        return;
+    };
+    let futs = articles
+        .into_iter()
+        .map(|a| mark_read(api.clone(), db.clone(), a.id, true));
+    join_all(futs).await;
+}
+
+pub async fn mark_category_read(
+    api: Arc<MinifluxApi>,
+    db: Arc<Mutex<Connection>>,
+    node: CategoryNode,
+) {
+    {
+        db.lock()
+            .unwrap()
+            .execute(
+                "UPDATE entries \
+                 SET status='read' \
+                 WHERE feed_id IN (SELECT id FROM feeds WHERE category_id=?1)",
+                params![node.category.id],
+            )
+            .ok();
+    }
+
+    let id = node.category.id.parse::<i64>().unwrap_or_default();
+    let Load::Ready(feeds) = node.feeds else {
+        return;
+    };
+    let futs = feeds.into_iter().flat_map(|f| {
+        let api = api.clone();
+        let db = db.clone();
+        let arts = match f.articles {
+            Load::Ready(a) => a,
+            _ => Vec::new(),
+        };
+        arts.into_iter()
+            .map(move |a| mark_read(api.clone(), db.clone(), a.id, true))
+    });
+
+    join_all(futs).await;
+}
+
+pub fn set_feed_articles_read(mut tree: Signal<Load<Vec<CategoryNode>>>, node: FeedNode) {
+    let mut guard = tree.write();
+    let Load::Ready(cats) = &mut *guard else {
+        return;
+    };
+    let Some(cat) = cats
+        .iter_mut()
+        .find(|c| c.category.id == node.feed.category.id)
+    else {
+        return;
+    };
+    let Load::Ready(feeds) = &mut cat.feeds else {
+        return;
+    };
+    let Some(feed) = feeds.iter_mut().find(|f| f.feed.id == node.feed.id) else {
+        return;
+    };
+    let Load::Ready(articles) = &mut feed.articles else {
+        return;
+    };
+    for a in articles.iter_mut() {
+        a.is_read = true;
+    }
+}
+
+pub fn set_category_articles_read(mut tree: Signal<Load<Vec<CategoryNode>>>, node: CategoryNode) {
+    let mut guard = tree.write();
+    let Load::Ready(cats) = &mut *guard else {
+        return;
+    };
+    let Some(cat) = cats.iter_mut().find(|c| c.category.id == node.category.id) else {
+        return;
+    };
+    let Load::Ready(feeds) = &mut cat.feeds else {
+        return;
+    };
+    for feed in feeds.iter_mut() {
+        if let Load::Ready(articles) = &mut feed.articles {
+            for a in articles.iter_mut() {
+                a.is_read = true;
+            }
+        }
+    }
 }
