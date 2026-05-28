@@ -120,7 +120,7 @@ pub async fn refresh(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>) -> Resul
 pub async fn mark_read(
     api: Arc<MinifluxApi>,
     db: Arc<Mutex<Connection>>,
-    entry_id: i64,
+    entry_id: String,
     read: bool,
 ) {
     let status = if read {
@@ -138,12 +138,13 @@ pub async fn mark_read(
             )
             .ok();
     }
+    let id = entry_id.parse::<i64>().unwrap_or_default();
     let _ = api
-        .update_entries_status(vec![entry_id], status, &Client::new())
+        .update_entries_status(vec![id], status, &Client::new())
         .await; // push
 }
 
-pub async fn toggle_star(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>, entry_id: i64) {
+pub async fn toggle_star(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>, entry_id: String) {
     {
         db.lock()
             .unwrap()
@@ -153,10 +154,12 @@ pub async fn toggle_star(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>, entr
             )
             .ok();
     }
-    let _ = api.toggle_bookmark(entry_id, &Client::new()).await; // server-side toggle
+
+    let id = entry_id.parse::<i64>().unwrap_or_default();
+    let _ = api.toggle_bookmark(id, &Client::new()).await; // server-side toggle
 }
 
-pub fn set_article_read(mut tree: Signal<Load<Vec<CategoryNode>>>, article_id: &str, read: bool) {
+pub fn set_article_read(mut tree: Signal<Load<Vec<CategoryNode>>>, article_id: String, read: bool) {
     let mut guard = tree.write();
     let Load::Ready(cats) = &mut *guard else {
         return;
@@ -191,6 +194,64 @@ pub fn find_article(tree: &Load<Vec<CategoryNode>>, article_id: &str) -> Option<
             if let Some(a) = articles.iter().find(|a| a.id == article_id) {
                 return Some(a.clone());
             }
+        }
+    }
+    None
+}
+
+pub fn set_article_starred(
+    mut tree: Signal<Load<Vec<CategoryNode>>>,
+    article_id: String,
+    starred: bool,
+) {
+    let mut guard = tree.write();
+    let Load::Ready(cats) = &mut *guard else {
+        return;
+    };
+    for cat in cats.iter_mut() {
+        let Load::Ready(feeds) = &mut cat.feeds else {
+            continue;
+        };
+        for feed in feeds.iter_mut() {
+            let Load::Ready(articles) = &mut feed.articles else {
+                continue;
+            };
+            if let Some(a) = articles.iter_mut().find(|a| a.id == article_id) {
+                a.is_starred = starred;
+                return;
+            }
+        }
+    }
+}
+
+pub fn sibling_article(
+    tree: &Load<Vec<CategoryNode>>,
+    article_id: &str,
+    filter: Filter,
+    direction: i32,
+) -> Option<String> {
+    let Load::Ready(cats) = tree else { return None };
+    for cat in cats {
+        let Load::Ready(feeds) = &cat.feeds else {
+            continue;
+        };
+        for feed in feeds {
+            let Load::Ready(articles) = &feed.articles else {
+                continue;
+            };
+            let Some(pos) = articles.iter().position(|a| a.id == article_id) else {
+                continue;
+            };
+
+            let mut i = pos as i32 + direction;
+            while i >= 0 && (i as usize) < articles.len() {
+                let a = &articles[i as usize];
+                if a.matches(filter) {
+                    return Some(a.id.clone());
+                }
+                i += direction;
+            }
+            return None;
         }
     }
     None

@@ -34,34 +34,25 @@ pub fn SearchBar(value: String, on_input: EventHandler<String>) -> Element {
 }
 
 #[component]
-pub fn FilterChips(current: Filter, on_change: EventHandler<Filter>) -> Element {
+pub fn FilterChips() -> Element {
+    let mut filter = use_context::<Signal<Filter>>();
+    let current = filter();
+
     rsx! {
         div { class: "filter-chips",
-            for filter in Filter::iter() {
-                FilterChip {
-                    key: "{filter.to_string()}",
-                    label: filter.to_string(),
-                    is_active: current == filter,
-                    on_click: move |_| on_change.call(filter),
+            for f in Filter::iter() {
+                {
+                    let cls = if f == current { "filter-chip active" } else { "filter-chip" };
+                    rsx! {
+                        span {
+                            key: "{f}",
+                            class: "{cls}",
+                            onclick: move |_| filter.set(f),
+                            "{f}"
+                        }
+                    }
                 }
             }
-            span { class: "filter-add", "＋" }
-        }
-    }
-}
-
-#[component]
-fn FilterChip(label: String, is_active: bool, on_click: EventHandler<()>) -> Element {
-    let class = if is_active {
-        "filter-chip active"
-    } else {
-        "filter-chip"
-    };
-    rsx! {
-        span {
-            class: "{class}",
-            onclick: move |_| on_click.call(()),
-            "{label}"
         }
     }
 }

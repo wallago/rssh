@@ -7,7 +7,7 @@ use rssh::prelude::*;
 #[component]
 pub fn CategoryRow(
     category: Category,
-    unread_count: Option<i64>,
+    count: Option<i64>,
     expanded: bool,
     on_click: EventHandler<()>,
 ) -> Element {
@@ -27,8 +27,8 @@ pub fn CategoryRow(
                 span { class: "chevron", "{chevron}" }
                 span { class: "row-title", "{category.label}" }
                 div { class: "row-meta",
-                    if let Some(unread_count) = unread_count {
-                        span { class: "unread-count", "{unread_count}" }
+                    if let Some(count) = count {
+                        span { class: "unread-count", "{count}" }
                     }
                 }
             }
@@ -39,7 +39,7 @@ pub fn CategoryRow(
 #[component]
 pub fn FeedRow(
     feed: Feed,
-    unread_count: Option<i64>,
+    count: Option<i64>,
     expanded: bool,
     on_click: EventHandler<()>,
 ) -> Element {
@@ -62,8 +62,8 @@ pub fn FeedRow(
                     if feed.error_count > 0 {
                         span { class: "feed-error", title: "Feed has fetch errors", "⚠" }
                     }
-                    if let Some(unread_count) = unread_count {
-                        span { class: "unread-count", "{unread_count}" }
+                    if let Some(count) = count {
+                        span { class: "unread-count", "{count}" }
                     }
                 }
             }
@@ -76,7 +76,8 @@ pub fn ArticleRow(
     article: Article,
     is_selected: bool,
     on_click: EventHandler<()>,
-    on_swipe: EventHandler<()>,
+    on_swipe_left: EventHandler<()>,
+    on_swipe_right: EventHandler<()>,
 ) -> Element {
     let mut start = use_signal(|| (0.0_f64, 0.0_f64));
     let mut dx = use_signal(|| 0.0_f64); // current horizontal offset
@@ -101,7 +102,8 @@ pub fn ArticleRow(
 
     rsx! {
         div { class: "swipe-row",
-            div { class: "swipe-action", "Read" }
+            div { class: "swipe-action swipe-action-left", "★" }
+            div { class: "swipe-action swipe-action-right", "Read" }
             div {
                 class: "{class}",
                 style: "transform: translateX({offset}px)",
@@ -121,11 +123,13 @@ pub fn ArticleRow(
                     }
                     if horizontal() {
                         moved.set(true);
-                        dx.set(mx.min(0.0)); // left-only: negative offset
+                        dx.set(mx);
                     }
                 },
                 onpointerup: move |_| {
-                    if dx().abs() >= threshold { on_swipe.call(()); }
+                    let v = dx();
+                    if v <= -threshold { on_swipe_left.call(()); }
+                    else if v >= threshold { on_swipe_right.call(()); }
                     dx.set(0.0);
                     horizontal.set(false);
                 },

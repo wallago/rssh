@@ -13,11 +13,8 @@ use reqwest::Url;
 use rusqlite::{Connection, Result, params};
 
 use crate::{
-    components::{tab::BottomTabBar, toast::Toast},
-    pages::{
-        feeds::FeedsPage, inbox::InboxPage, reader::ReaderPage, saved::SavedPage,
-        settings::SettingsPage,
-    },
+    components::{bar::BottomBar, toast::Toast},
+    pages::{inbox::InboxPage, reader::ReaderPage},
 };
 
 use rssh::prelude::*;
@@ -27,20 +24,23 @@ mod pages;
 
 const STYLE: Asset = asset!("/assets/style.css");
 
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Tab {
-    Inbox,
-    Feeds,
-    Saved,
-    Settings,
-}
-
 #[derive(Routable, Clone, PartialEq)]
 enum Route {
+    #[layout(AppLayout)]
     #[route("/")]
     InboxPage {},
     #[route("/article/:id")]
     ReaderPage { id: String },
+}
+
+#[component]
+fn AppLayout() -> Element {
+    rsx! {
+        div { class: "app",
+            main { class: "app-main", Outlet::<Route> {} }
+            BottomBar {}
+        }
+    }
 }
 
 fn main() {
@@ -73,6 +73,8 @@ fn App() -> Element {
 
     let mut tree: Signal<Load<Vec<CategoryNode>>> = use_signal(|| Load::Idle);
     let syncing: Signal<bool> = use_signal(|| false);
+    let filter: Signal<Filter> = use_signal(|| Filter::Unread);
+    use_context_provider(|| filter);
     use_context_provider(|| syncing);
     use_context_provider(|| tree);
 
