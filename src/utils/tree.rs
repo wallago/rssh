@@ -48,11 +48,17 @@ pub fn build_tree(
         .collect()
 }
 
-pub fn toggle_category(mut node: CategoryNode) {
-    node.expanded = !node.expanded;
+pub fn toggle_category(tree: Signal<Option<Vec<CategoryNode>>>, node: CategoryNode) {
+    if let Some(cats) = tree() {
+        tracing::debug!("expand category: {}", node.category.label);
+        if let Some(mut cat) = cats.into_iter().find(|c| *c == node) {
+            cat.expanded = !node.expanded;
+        }
+    }
 }
 
 pub fn toggle_feed(mut node: FeedNode) {
+    tracing::debug!("expand feed: {}", node.feed.label);
     node.expanded = !node.expanded;
 }
 

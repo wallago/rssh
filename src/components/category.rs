@@ -92,7 +92,7 @@ pub fn CategoryNodeView(node: ReadSignal<CategoryNode>) -> Element {
             category: node().category,
             count:  iter_articles(tree().unwrap_or(Vec::new()), Some(node().category.id), None, Some(filter())).count(),
             expanded: node().expanded,
-            on_click: move |_| toggle_category(node()),
+            on_click: move |_| toggle_category(tree,node()),
             on_swipe_left: {
                 move |_| {
                     // spawn(async move {
