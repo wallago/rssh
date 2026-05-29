@@ -3,7 +3,7 @@ use miniflux_api::models::{Entry, EntryStatus};
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Article {
-    pub id: String,
+    pub id: i64,
     pub feed: Feed,
     pub title: String,
     pub snippet: String,
@@ -20,7 +20,6 @@ impl Article {
             Filter::All => true,
             Filter::Unread => !self.is_read,
             Filter::Starred => self.is_starred,
-            Filter::Archived => false,
         }
     }
 }

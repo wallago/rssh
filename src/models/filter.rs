@@ -5,5 +5,4 @@ pub enum Filter {
     All,
     Unread,
     Starred,
-    Archived,
 }

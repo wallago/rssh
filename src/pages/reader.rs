@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus::prelude::*;
+use dioxus::{html::article, prelude::*};
 use miniflux_api::MinifluxApi;
 use rssh::prelude::*;
 use rusqlite::Connection;
@@ -8,10 +8,11 @@ use rusqlite::Connection;
 use crate::Route;
 
 #[component]
-pub fn ReaderPage(id: ReadSignal<String>) -> Element {
-    let tree = use_context::<Signal<Load<Vec<CategoryNode>>>>();
+pub fn Reader(id: ReadSignal<i64>) -> Element {
+    let tree = use_context::<Signal<Option<Vec<CategoryNode>>>>();
     let api = use_context::<Arc<MinifluxApi>>();
     let db = use_context::<Arc<Mutex<Connection>>>();
+
     let mut start = use_signal(|| (0.0_f64, 0.0_f64));
     let mut dx = use_signal(|| 0.0_f64);
     let mut horizontal = use_signal(|| false);
@@ -21,13 +22,11 @@ pub fn ReaderPage(id: ReadSignal<String>) -> Element {
     let offset = dx();
     let id_for_swipe = id.clone();
 
-    let article = use_memo(move || find_article(&tree(), &id()));
+    let article = use_memo(move || iter_articles(tree()?, None, None, None).find(|a| a.id == id()));
 
-    use_effect({
-        move || {
-            if matches!(tree(), Load::Ready(_)) && article().is_none() {
-                navigator().replace(Route::InboxPage {});
-            }
+    use_effect(move || {
+        if matches!(tree(), Some(_)) && article().is_none() {
+            navigator().replace(Route::Home {});
         }
     });
 
@@ -49,23 +48,24 @@ pub fn ReaderPage(id: ReadSignal<String>) -> Element {
         });
     });
 
-    use_effect({
-        move || {
-            let id = id();
-            let api = api.clone();
-            let db = db.clone();
-            spawn(async move {
-                mark_read(api, db, id.clone(), true).await;
-                set_article_read(tree, id, true);
-            });
-        }
-    });
-
     let Some(article) = article() else {
         return rsx! {
             div { class: "reader-page reader-loading", "Loading…" }
         };
     };
+
+    use_effect({
+        let db = db.clone();
+        let article = article.clone();
+        move || {
+            let api = api.clone();
+            let db = db.clone();
+            let article = article.clone();
+            spawn(async move {
+                toggle_read(api, db, article).await;
+            });
+        }
+    });
 
     rsx! {
         div { class: "reader-page",
@@ -88,6 +88,7 @@ pub fn ReaderPage(id: ReadSignal<String>) -> Element {
             },
             onpointerup: {
                 let id = id_for_swipe.clone();
+                let article = article.clone();
                 move |_| {
                     let v = dx();
                     dx.set(0.0);
@@ -96,8 +97,9 @@ pub fn ReaderPage(id: ReadSignal<String>) -> Element {
                     if v.abs() < threshold { return; }
 
                     let dir = if v < 0.0 { 1 } else { -1 };
-                    if let Some(next) = sibling_article(&tree(), &id(), filter(), dir) {
-                        navigator().replace(Route::ReaderPage { id: next });
+                    let article = article.clone();
+                    if let Some(next) = sibling_article(db.clone(), article, filter(), dir) {
+                        navigator().replace(Route::Reader { id: next });
                     }
                 }
             },

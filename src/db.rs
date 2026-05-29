@@ -1,6 +1,5 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
-use futures::lock::Mutex;
 use rusqlite::{Connection, params};
 
 use crate::{
@@ -9,10 +8,12 @@ use crate::{
 };
 
 pub fn get_db_conn() -> Option<Arc<Mutex<Connection>>> {
-    let app_name = env!("CARGO_PKG_NAME");
-    let dir = dirs::data_dir()?;
-    std::fs::create_dir_all(&dir).ok()?;
-    let conn = Connection::open(dir.join(format!("{app_name}.db")))?;
+    let app_name = "rssh";
+    let dir = std::path::PathBuf::from("/data/data/com.wallago.rssh/files");
+    std::fs::create_dir_all(&dir)
+        .unwrap_or_else(|e| panic!("failed to create data dir {dir:?}: {e}"));
+    let conn = Connection::open(dir.join(format!("{app_name}.db")))
+        .unwrap_or_else(|e| panic!("failed to get DB connection: {e}"));
     init_schema(&conn).expect("init schema");
     Some(Arc::new(Mutex::new(conn)))
 }
@@ -98,7 +99,7 @@ pub fn load_categories(conn: &Connection) -> rusqlite::Result<Vec<Category>> {
         let label: String = row.get(1)?;
         Ok(Category {
             color: string_to_color(&label),
-            id: id.to_string(),
+            id,
             label,
         })
     })?;
@@ -115,12 +116,12 @@ pub fn load_feeds(conn: &Connection) -> rusqlite::Result<Vec<Feed>> {
     let rows = stmt.query_map([], |row| {
         let cat_label: String = row.get(4)?;
         Ok(Feed {
-            id: row.get::<_, i64>(0)?.to_string(),
+            id: row.get::<_, i64>(0)?,
             label: row.get(1)?,
             error_count: row.get(2)?,
             category: Category {
                 color: string_to_color(&cat_label),
-                id: row.get::<_, i64>(3)?.to_string(),
+                id: row.get::<_, i64>(3)?,
                 label: cat_label,
             },
         })
@@ -147,17 +148,17 @@ pub fn load_articles(conn: &Connection) -> rusqlite::Result<Vec<Article>> {
 
         let category = Category {
             color: string_to_color(&cat_label),
-            id: row.get::<_, i64>(10)?.to_string(),
+            id: row.get::<_, i64>(10)?,
             label: cat_label,
         };
         let feed = Feed {
-            id: row.get::<_, i64>(7)?.to_string(),
+            id: row.get::<_, i64>(7)?,
             label: row.get(8)?,
             error_count: row.get(9)?,
             category,
         };
         Ok(Article {
-            id: row.get::<_, i64>(0)?.to_string(),
+            id: row.get::<_, i64>(0)?,
             feed,
             title: row.get(1)?,
             snippet,

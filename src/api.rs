@@ -1,10 +1,10 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use miniflux_api::MinifluxApi;
-use reqwest::Client;
+use reqwest::{Client, Url};
 
 pub fn get_api_conn() -> Option<Arc<MinifluxApi>> {
-    let url = Url::from_str(env!("MINIFLUX_URL"))?;
+    let url = Url::from_str(env!("MINIFLUX_URL")).ok()?;
     let usename = env!("MINIFLUX_USERNAME");
     let passwd = env!("MINIFLUX_PASSWORD");
     Some(Arc::new(MinifluxApi::new(
@@ -17,7 +17,7 @@ pub fn get_api_conn() -> Option<Arc<MinifluxApi>> {
 pub async fn fetch_all(
     api: &MinifluxApi,
     client: &Client,
-) -> Some<(
+) -> Option<(
     Vec<miniflux_api::models::Category>,
     Vec<miniflux_api::models::Feed>,
     Vec<miniflux_api::models::Entry>,

@@ -4,14 +4,20 @@ use std::{
 };
 
 use anyhow::Result;
-use dioxus::{
-    html::article,
-    signals::{Signal, WritableExt},
-};
+use dioxus::signals::{Signal, WritableExt};
 use futures::future::join_all;
 use miniflux_api::{ApiError, MinifluxApi};
 use reqwest::Client;
 use rusqlite::{Connection, params};
+
+pub mod prelude {
+    pub use crate::utils::article::*;
+    pub use crate::utils::tree::*;
+    pub use crate::utils::*;
+}
+
+mod article;
+mod tree;
 
 use crate::prelude::*;
 
@@ -42,286 +48,60 @@ pub fn string_to_color(s: &str) -> String {
     format!("#{:02x}{:02x}{:02x}", to(r), to(g), to(b))
 }
 
-pub fn toggle_category(mut tree: Signal<Load<Vec<CategoryNode>>>, id: &str) {
-    let mut guard = tree.write();
-    let Load::Ready(cats) = &mut *guard else {
-        return;
-    };
-    if let Some(node) = cats.iter_mut().find(|c| c.category.id == id) {
-        node.expanded = !node.expanded;
-    }
-}
-
-pub fn toggle_feed(mut tree: Signal<Load<Vec<CategoryNode>>>, cat_id: &str, id: &str) {
-    let mut guard = tree.write();
-    let Load::Ready(cats) = &mut *guard else {
-        return;
-    };
-    if let Some(cat) = cats.iter_mut().find(|c| c.category.id == cat_id) {
-        if let Some(node) = match &mut cat.feeds {
-            Load::Ready(feeds) => feeds.iter_mut().find(|f| f.feed.id == id),
-            _ => return,
-        } {
-            node.expanded = !node.expanded;
-        }
-    }
-}
-
-pub async fn initial_sync(
-    api: Arc<MinifluxApi>,
-    db: Arc<Mutex<Connection>>,
-) -> Result<(), ApiError> {
-    let empty = { is_empty(&db.lock().unwrap()).unwrap_or(true) };
-    if empty {
-        let (c, f, e) = fetch_all(&api, &Client::new()).await?;
-        write_all(&mut db.lock().unwrap(), &c, &f, &e).ok();
-    }
-    Ok(())
-}
-
-pub async fn refresh(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>) -> Result<(), ApiError> {
+pub async fn refresh(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>) -> Option<()> {
     let (c, f, e) = fetch_all(&api, &Client::new()).await?;
-    write_all(&mut db.lock().unwrap(), &c, &f, &e).ok();
-    Ok(())
+    let mut conn = db.lock().ok()?;
+    write_all(&mut *conn, &c, &f, &e).ok()
 }
 
-pub async fn mark_read(
+pub async fn sync_and_load(
     api: Arc<MinifluxApi>,
     db: Arc<Mutex<Connection>>,
-    entry_id: String,
-    read: bool,
-) {
-    let status = if read {
-        miniflux_api::models::EntryStatus::Read
-    } else {
-        miniflux_api::models::EntryStatus::Unread
-    };
-    {
-        let s: &str = status.into();
-        db.lock()
-            .unwrap()
-            .execute(
-                "UPDATE entries SET status=?1 WHERE id=?2",
-                params![s, entry_id],
-            )
-            .ok();
-    }
-    let id = entry_id.parse::<i64>().unwrap_or_default();
-    let _ = api
-        .update_entries_status(vec![id], status, &Client::new())
-        .await; // push
-}
-
-pub async fn toggle_star(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>, entry_id: String) {
-    {
-        db.lock()
-            .unwrap()
-            .execute(
-                "UPDATE entries SET starred = NOT starred WHERE id=?1",
-                params![entry_id],
-            )
-            .ok();
-    }
-
-    let id = entry_id.parse::<i64>().unwrap_or_default();
-    let _ = api.toggle_bookmark(id, &Client::new()).await; // server-side toggle
-}
-
-pub fn set_article_read(mut tree: Signal<Load<Vec<CategoryNode>>>, article_id: String, read: bool) {
-    let mut guard = tree.write();
-    let Load::Ready(cats) = &mut *guard else {
-        return;
+    mut notice: Signal<Option<Notice>>,
+    mut tree: Signal<Option<Vec<CategoryNode>>>,
+) -> anyhow::Result<()> {
+    use anyhow::Context;
+    let empty = {
+        let mut conn = db.lock().ok().context("access to DB failed")?;
+        is_empty(&mut *conn).context("checking cache")?
     };
 
-    for cat in cats.iter_mut() {
-        let Load::Ready(feeds) = &mut cat.feeds else {
-            continue;
-        };
-        for feed in feeds.iter_mut() {
-            let Load::Ready(articles) = &mut feed.articles else {
-                continue;
-            };
-            if let Some(a) = articles.iter_mut().find(|a| a.id == article_id) {
-                a.is_read = read;
-                return;
-            }
-        }
+    if empty {
+        notice.set(Some(Notice::sync("initial sync…")));
+        refresh(api, db.clone())
+            .await
+            .ok_or_else(|| anyhow::anyhow!("initial sync failed"))?;
     }
-}
 
-pub fn find_article(tree: &Load<Vec<CategoryNode>>, article_id: &str) -> Option<Article> {
-    let Load::Ready(cats) = tree else { return None };
-    for cat in cats {
-        let Load::Ready(feeds) = &cat.feeds else {
-            continue;
-        };
-        for feed in feeds {
-            let Load::Ready(articles) = &feed.articles else {
-                continue;
-            };
-            if let Some(a) = articles.iter().find(|a| a.id == article_id) {
-                return Some(a.clone());
-            }
-        }
-    }
-    None
-}
-
-pub fn set_article_starred(
-    mut tree: Signal<Load<Vec<CategoryNode>>>,
-    article_id: String,
-    starred: bool,
-) {
-    let mut guard = tree.write();
-    let Load::Ready(cats) = &mut *guard else {
-        return;
+    notice.set(Some(Notice::sync("loading…")));
+    let (cats, feeds, articles) = {
+        let mut conn = db.lock().ok().context("access to DB failed")?;
+        (
+            load_categories(&conn).context("load categories")?,
+            load_feeds(&conn).context("load feeds")?,
+            load_articles(&conn).context("load articles")?,
+        )
     };
-    for cat in cats.iter_mut() {
-        let Load::Ready(feeds) = &mut cat.feeds else {
-            continue;
-        };
-        for feed in feeds.iter_mut() {
-            let Load::Ready(articles) = &mut feed.articles else {
-                continue;
-            };
-            if let Some(a) = articles.iter_mut().find(|a| a.id == article_id) {
-                a.is_starred = starred;
-                return;
-            }
-        }
-    }
+
+    tree.set(Some(build_tree(cats, feeds, articles)));
+    notice.set(None);
+    Ok(())
 }
 
 pub fn sibling_article(
-    tree: &Load<Vec<CategoryNode>>,
-    article_id: &str,
+    db: Arc<Mutex<Connection>>,
+    article: Article,
     filter: Filter,
-    direction: i32,
-) -> Option<String> {
-    let Load::Ready(cats) = tree else { return None };
-    for cat in cats {
-        let Load::Ready(feeds) = &cat.feeds else {
-            continue;
-        };
-        for feed in feeds {
-            let Load::Ready(articles) = &feed.articles else {
-                continue;
-            };
-            let Some(pos) = articles.iter().position(|a| a.id == article_id) else {
-                continue;
-            };
-
-            let mut i = pos as i32 + direction;
-            while i >= 0 && (i as usize) < articles.len() {
-                let a = &articles[i as usize];
-                if a.matches(filter) {
-                    return Some(a.id.clone());
-                }
-                i += direction;
-            }
-            return None;
+    direction: i64,
+) -> Option<i64> {
+    let articles = load_articles(&mut *db.lock().ok()?).ok()?;
+    let mut i = article.id + direction;
+    while i >= 0 && (i as usize) < articles.len() {
+        let a = &articles[i as usize];
+        if a.matches(filter) {
+            return Some(a.id.clone());
         }
+        i += direction;
     }
     None
-}
-
-pub async fn mark_feed_read(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>, node: FeedNode) {
-    {
-        db.lock()
-            .unwrap()
-            .execute(
-                "UPDATE entries SET status='read' WHERE feed_id=?1",
-                params![node.feed.id],
-            )
-            .ok();
-    }
-
-    let id = node.feed.id.parse::<i64>().unwrap_or_default();
-    let Load::Ready(articles) = node.articles else {
-        return;
-    };
-    let futs = articles
-        .into_iter()
-        .map(|a| mark_read(api.clone(), db.clone(), a.id, true));
-    join_all(futs).await;
-}
-
-pub async fn mark_category_read(
-    api: Arc<MinifluxApi>,
-    db: Arc<Mutex<Connection>>,
-    node: CategoryNode,
-) {
-    {
-        db.lock()
-            .unwrap()
-            .execute(
-                "UPDATE entries \
-                 SET status='read' \
-                 WHERE feed_id IN (SELECT id FROM feeds WHERE category_id=?1)",
-                params![node.category.id],
-            )
-            .ok();
-    }
-
-    let id = node.category.id.parse::<i64>().unwrap_or_default();
-    let Load::Ready(feeds) = node.feeds else {
-        return;
-    };
-    let futs = feeds.into_iter().flat_map(|f| {
-        let api = api.clone();
-        let db = db.clone();
-        let arts = match f.articles {
-            Load::Ready(a) => a,
-            _ => Vec::new(),
-        };
-        arts.into_iter()
-            .map(move |a| mark_read(api.clone(), db.clone(), a.id, true))
-    });
-
-    join_all(futs).await;
-}
-
-pub fn set_feed_articles_read(mut tree: Signal<Load<Vec<CategoryNode>>>, node: FeedNode) {
-    let mut guard = tree.write();
-    let Load::Ready(cats) = &mut *guard else {
-        return;
-    };
-    let Some(cat) = cats
-        .iter_mut()
-        .find(|c| c.category.id == node.feed.category.id)
-    else {
-        return;
-    };
-    let Load::Ready(feeds) = &mut cat.feeds else {
-        return;
-    };
-    let Some(feed) = feeds.iter_mut().find(|f| f.feed.id == node.feed.id) else {
-        return;
-    };
-    let Load::Ready(articles) = &mut feed.articles else {
-        return;
-    };
-    for a in articles.iter_mut() {
-        a.is_read = true;
-    }
-}
-
-pub fn set_category_articles_read(mut tree: Signal<Load<Vec<CategoryNode>>>, node: CategoryNode) {
-    let mut guard = tree.write();
-    let Load::Ready(cats) = &mut *guard else {
-        return;
-    };
-    let Some(cat) = cats.iter_mut().find(|c| c.category.id == node.category.id) else {
-        return;
-    };
-    let Load::Ready(feeds) = &mut cat.feeds else {
-        return;
-    };
-    for feed in feeds.iter_mut() {
-        if let Load::Ready(articles) = &mut feed.articles {
-            for a in articles.iter_mut() {
-                a.is_read = true;
-            }
-        }
-    }
 }

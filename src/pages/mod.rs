@@ -1,2 +1,2 @@
-pub mod inbox;
+pub mod home;
 pub mod reader;

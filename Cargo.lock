@@ -2853,12 +2853,14 @@ dependencies = [
  "dioxus-web",
  "dirs",
  "futures",
+ "jni 0.22.4",
  "miniflux_api",
  "pretty_assertions",
  "reqwest 0.13.4",
  "rusqlite",
  "serde",
  "strum",
+ "tokio",
  "tracing",
 ]
 
