@@ -59,6 +59,7 @@ pub async fn sync_and_load(
     db: Arc<Mutex<Connection>>,
     mut notice: Signal<Option<Notice>>,
     mut tree: Signal<Option<Vec<CategoryNode>>>,
+    force: bool,
 ) -> anyhow::Result<()> {
     use anyhow::Context;
     let empty = {
@@ -66,11 +67,15 @@ pub async fn sync_and_load(
         is_empty(&mut *conn).context("checking cache")?
     };
 
-    if empty {
-        notice.set(Some(Notice::sync("initial sync…")));
+    if empty || force {
+        notice.set(Some(Notice::sync(if force {
+            "refreshing…"
+        } else {
+            "initial sync…"
+        })));
         refresh(api, db.clone())
             .await
-            .ok_or_else(|| anyhow::anyhow!("initial sync failed"))?;
+            .ok_or_else(|| anyhow::anyhow!("refresh failed"))?;
     }
 
     notice.set(Some(Notice::sync("loading…")));

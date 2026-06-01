@@ -70,7 +70,7 @@ pub fn Toast() -> Element {
                         spawn(async move {
                             match r {
                                 Retry::Refresh => {
-                                    if let Err(e) = sync_and_load(api, db,notice, tree).await {
+                                    if let Err(e) = sync_and_load(api, db,notice, tree, false).await {
                                         notice.set(Some(Notice::error(
                                             format!("Retry failed: {e}"),
                                             Some(Retry::Refresh),

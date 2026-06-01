@@ -88,7 +88,7 @@ fn App() -> Element {
         let db = db.clone();
         let api = api.clone();
         async move {
-            if let Err(e) = sync_and_load(api, db, notice, tree).await {
+            if let Err(e) = sync_and_load(api, db, notice, tree, false).await {
                 tracing::error!("startup load failed: {e:?}");
                 notice.set(Some(Notice::error(
                     format!("Couldn't load data: {e}"),
