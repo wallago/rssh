@@ -91,6 +91,43 @@
         androidSdkRoot = "${androidSdk}/libexec/android-sdk";
         ndkVersion = "29.0.14206865";
         jdk = pkgs.jdk25;
+
+        # ── Claude Settings ─────────────────────────────────────
+        claudeLocalSettings = builtins.toJSON {
+          permissions = {
+            allow = [
+              # Nix
+              "Bash(nix flake check*)"
+              "Bash(nix eval*)"
+              "Bash(nixos-rebuild dry-build*)"
+              "Bash(statix check*)"
+              "Bash(deadnix*)"
+              "Bash(just*)"
+              "Bash(nix build --dry-run*)"
+              "Bash(nix search nixpkgs*)"
+              "Bash(curl -s https://search.nixos.org*)"
+
+              # Rust
+              "Bash(cargo check*)"
+              "Bash(cargo clippy*)"
+              "Bash(cargo nextest run*)"
+              "Bash(cargo test*)"
+              "Bash(cargo tree*)"
+              "Bash(cargo machete*)"
+              "Bash(cargo deny check*)"
+              "Bash(cargo audit*)"
+            ];
+          };
+          enabledPlugins = {
+            "claude-md-management@claude-plugins-official" = true;
+            "superpowers@claude-plugins-official" = true;
+            "context7@claude-plugins-official" = true;
+            "code-review@claude-plugins-official" = true;
+            "code-simplifier@claude-plugins-official" = true;
+            "github@claude-plugins-official" = true;
+            "frontend-design@claude-plugins-official" = true;
+          };
+        };
       in
       rec {
         # ── Packages ──────────────────────────────────────────────
@@ -120,6 +157,7 @@
             claude
             androidSdk
             jdk
+            nodejs
           ];
           ANDROID_HOME = androidSdkRoot;
           ANDROID_SDK_ROOT = androidSdkRoot;
@@ -127,6 +165,10 @@
           ANDROID_NDK_ROOT = "${androidSdkRoot}/ndk/${ndkVersion}";
           JAVA_HOME = "${jdk.home}";
           GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidSdkRoot}/build-tools/34.0.0/aapt2";
+          shellHook = ''
+            mkdir -p .claude
+            echo '${claudeLocalSettings}' > .claude/settings.local.json
+          '';
         };
       }
     );

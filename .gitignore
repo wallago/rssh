@@ -12,5 +12,4 @@
 
 # Dev environement
 .env
-.envrc
 .direnv/
