@@ -6,7 +6,7 @@ use std::{
 use anyhow::Result;
 use dioxus::{
     html::{article, filter},
-    signals::{Signal, WritableExt},
+    signals::{ReadSignal, Signal, WritableExt},
 };
 use futures::future::join_all;
 use miniflux_api::{ApiError, MinifluxApi};
@@ -48,11 +48,11 @@ pub fn build_tree(
         .collect()
 }
 
-pub fn toggle_category(tree: Signal<Option<Vec<CategoryNode>>>, node: CategoryNode) {
-    if let Some(cats) = tree() {
-        tracing::debug!("expand category: {}", node.category.label);
-        if let Some(mut cat) = cats.into_iter().find(|c| *c == node) {
-            cat.expanded = !node.expanded;
+pub fn toggle_category(mut tree: Signal<Option<Vec<CategoryNode>>>, node: CategoryNode) {
+    if let Some(cats) = tree.write().as_mut() {
+        if let Some(cat) = cats.into_iter().find(|c| c.category.id == node.category.id) {
+            tracing::debug!("toggle expanded category: {}", node.category.label);
+            cat.expanded = !cat.expanded;
         }
     }
 }
