@@ -10,7 +10,7 @@ watch:
 
 # Run the project
 run *ARGS:
-    dx serve --android -- {{ARGS}}
+    dx serve --android {{ARGS}}
 
 # Run emulator
 emulator:

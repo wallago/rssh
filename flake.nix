@@ -74,7 +74,6 @@
               ];
             };
           };
-        claude = claude-code.packages.${system}.default;
 
         # ── Android SDK + NDK ─────────────────────────────────────
         androidComposition = pkgs.androidenv.composeAndroidPackages {
@@ -93,6 +92,7 @@
         jdk = pkgs.jdk25;
 
         # ── Claude Settings ─────────────────────────────────────
+        claude = claude-code.packages.${system}.default;
         claudeLocalSettings = builtins.toJSON {
           permissions = {
             allow = [
@@ -154,9 +154,9 @@
             just
             wasm-bindgen-cli
             dioxus-cli
-            claude
             androidSdk
             jdk
+            claude
             nodejs
           ];
           ANDROID_HOME = androidSdkRoot;

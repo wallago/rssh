@@ -1,12 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus::prelude::*;
-use miniflux_api::{
-    MinifluxApi,
-    models::{Entry, EntryStatus},
-};
+use miniflux_api::MinifluxApi;
 use rusqlite::Connection;
-use strum::EnumIter;
 
 use rssh::prelude::*;
 
@@ -88,18 +84,19 @@ pub fn FeedRow(
 
 #[component]
 pub fn FeedNodeView(node: ReadSignal<FeedNode>) -> Element {
-    let mut tree = use_context::<Signal<Option<Vec<CategoryNode>>>>();
+    let tree = use_context::<Signal<Option<Vec<CategoryNode>>>>();
     let filter = use_context::<Signal<Filter>>();
 
     let api = use_context::<Arc<MinifluxApi>>();
     let db = use_context::<Arc<Mutex<Connection>>>();
+    let notice = use_context::<Signal<Option<Notice>>>();
 
     rsx! {
         FeedRow {
             feed: node().feed,
             count:  iter_articles(tree().unwrap_or_default(), Some(node().feed.category.id), Some(node().feed.id), Some(filter())).count(),
             expanded: node().expanded,
-            on_click: move |_| toggle_feed(node()),
+            on_click: move |_| toggle_feed(tree, node()),
             on_swipe_left: {
                 move |_| {
                     // spawn(async move {
@@ -149,7 +146,7 @@ pub fn FeedNodeView(node: ReadSignal<FeedNode>) -> Element {
                                                 let db = db.clone();
                                                 let article = article.clone();
                                                 spawn(async move {
-                                                    toggle_read(api, db, article).await;
+                                                    toggle_read(api, db, tree, notice, article).await;
                                                 });
                                             }
                                         },
@@ -162,7 +159,7 @@ pub fn FeedNodeView(node: ReadSignal<FeedNode>) -> Element {
                                                 let db = db.clone();
                                                 let article = article.clone();
                                                 spawn(async move {
-                                                    toggle_star(api, db, article).await;
+                                                    toggle_star(api, db, tree, notice, article).await;
                                                 });
                                             }
                                         },

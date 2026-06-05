@@ -1,15 +1,7 @@
-use std::{
-    hash::{DefaultHasher, Hash, Hasher},
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
-use anyhow::Result;
-use dioxus::{
-    html::article,
-    signals::{Signal, WritableExt},
-};
-use futures::future::join_all;
-use miniflux_api::{ApiError, MinifluxApi};
+use dioxus::signals::{Signal, WritableExt};
+use miniflux_api::MinifluxApi;
 use reqwest::Client;
 use rusqlite::{Connection, params};
 
@@ -18,6 +10,8 @@ use crate::prelude::*;
 pub async fn toggle_read(
     api: Arc<MinifluxApi>,
     db: Arc<Mutex<Connection>>,
+    tree: Signal<Option<Vec<CategoryNode>>>,
+    mut notice: Signal<Option<Notice>>,
     mut article: Article,
 ) -> Option<()> {
     let status = if !article.is_read {
@@ -38,12 +32,20 @@ pub async fn toggle_read(
         .await
         .ok()?;
     article.is_read = !article.is_read;
+    update_article(tree, article.id, move |a| a.is_read = article.is_read);
+    notice.set(Some(Notice::info(if article.is_read {
+        "Marked as read"
+    } else {
+        "Marked as unread"
+    })));
     Some(())
 }
 
 pub async fn toggle_star(
     api: Arc<MinifluxApi>,
     db: Arc<Mutex<Connection>>,
+    tree: Signal<Option<Vec<CategoryNode>>>,
+    mut notice: Signal<Option<Notice>>,
     mut article: Article,
 ) -> Option<()> {
     db.lock()
@@ -55,5 +57,11 @@ pub async fn toggle_star(
         .ok()?;
     let _ = api.toggle_bookmark(article.id, &Client::new()).await.ok()?;
     article.is_starred = !article.is_starred;
+    update_article(tree, article.id, move |a| a.is_starred = article.is_starred);
+    notice.set(Some(Notice::info(if article.is_starred {
+        "Starred"
+    } else {
+        "Unstarred"
+    })));
     Some(())
 }

@@ -13,6 +13,7 @@ futures = "0.3.32"
 jni = "0.22.4"
 miniflux_api = "0.8.0"
 reqwest = { version = "0.13.3", features = ["native-tls"] }
+openssl = { version = "0.10", features = ["vendored"] }
 rusqlite = { version = "0.39.0", features = ["bundled"] }
 serde = { version = "1.0.228", features = ["derive"] }
 strum = { version = "0.28.0", features = ["derive"] }

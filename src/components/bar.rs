@@ -43,8 +43,8 @@ fn InboxFilters() -> Element {
                 key: "{label}",
                 class: if f == current { "bb-button active" } else { "bb-button" },
                 onclick: move |_| filter.set(f),
-                span { class: "bb-icon", "{icon}" }
-                span { class: "bb-label", "{label}" }
+                span { class: "bb-icon", "{icon.to_string()}" }
+                span { class: "bb-label", "{label.to_string()}" }
             }
         }
     }
@@ -55,9 +55,9 @@ fn ArticleActions(article: ReadSignal<Article>) -> Element {
     let tree = use_context::<Signal<Option<Vec<CategoryNode>>>>();
     let api = use_context::<Arc<MinifluxApi>>();
     let db = use_context::<Arc<Mutex<Connection>>>();
+    let notice = use_context::<Signal<Option<Notice>>>();
 
     let is_starred = article().is_starred;
-    let is_read = article().is_read;
     let url = article().url;
 
     rsx! {
@@ -68,7 +68,7 @@ fn ArticleActions(article: ReadSignal<Article>) -> Element {
                     let api = api.clone();
                     let db  = db.clone();
                     spawn(async move {
-                        toggle_star(api, db, article()).await;
+                        toggle_star(api, db, tree, notice ,article()).await;
                     });
                 }
             },
@@ -77,7 +77,7 @@ fn ArticleActions(article: ReadSignal<Article>) -> Element {
         }
         a {
             class: "bb-button",
-            href: "{url}",
+            href: "{url.to_string()}",
             target: "_blank",
             rel: "noopener noreferrer",
             span { class: "bb-icon", "↗" }

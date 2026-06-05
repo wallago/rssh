@@ -1,19 +1,5 @@
-use std::{
-    hash::{DefaultHasher, Hash, Hasher},
-    sync::{Arc, Mutex},
-};
-
-use anyhow::Result;
-use dioxus::{
-    html::{article, filter},
-    signals::{ReadSignal, Signal, WritableExt},
-};
-use futures::future::join_all;
-use miniflux_api::{ApiError, MinifluxApi};
-use reqwest::Client;
-use rusqlite::{Connection, params};
-
 use crate::prelude::*;
+use dioxus::signals::{Signal, WritableExt};
 
 pub fn build_tree(
     cats: Vec<Category>,
@@ -53,13 +39,26 @@ pub fn toggle_category(mut tree: Signal<Option<Vec<CategoryNode>>>, node: Catego
         if let Some(cat) = cats.into_iter().find(|c| c.category.id == node.category.id) {
             tracing::debug!("toggle expanded category: {}", node.category.label);
             cat.expanded = !cat.expanded;
+            return;
         }
     }
 }
 
-pub fn toggle_feed(mut node: FeedNode) {
-    tracing::debug!("expand feed: {}", node.feed.label);
-    node.expanded = !node.expanded;
+pub fn toggle_feed(mut tree: Signal<Option<Vec<CategoryNode>>>, node: FeedNode) {
+    if let Some(cats) = tree.write().as_mut() {
+        for c in cats.iter_mut() {
+            if let Some(feed) = c
+                .feeds
+                .iter_mut()
+                .flatten()
+                .find(|f| f.feed.id == node.feed.id)
+            {
+                tracing::debug!("toggle expanded feed: {}", node.feed.label);
+                feed.expanded = !feed.expanded;
+                return;
+            }
+        }
+    }
 }
 
 pub fn iter_articles(
@@ -92,4 +91,26 @@ pub fn iter_articles(
                 true
             }
         })
+}
+
+pub fn update_article(
+    mut tree: Signal<Option<Vec<CategoryNode>>>,
+    article_id: i64,
+    apply: impl Fn(&mut Article),
+) {
+    if let Some(cats) = tree.write().as_mut() {
+        for c in cats.iter_mut() {
+            for feed in c.feeds.iter_mut().flatten() {
+                if let Some(a) = feed
+                    .articles
+                    .iter_mut()
+                    .flatten()
+                    .find(|a| a.id == article_id)
+                {
+                    apply(a);
+                    return;
+                }
+            }
+        }
+    }
 }

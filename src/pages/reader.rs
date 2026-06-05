@@ -12,6 +12,7 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
     let tree = use_context::<Signal<Option<Vec<CategoryNode>>>>();
     let api = use_context::<Arc<MinifluxApi>>();
     let db = use_context::<Arc<Mutex<Connection>>>();
+    let notice = use_context::<Signal<Option<Notice>>>();
 
     let mut start = use_signal(|| (0.0_f64, 0.0_f64));
     let mut dx = use_signal(|| 0.0_f64);
@@ -62,7 +63,7 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
             let db = db.clone();
             let article = article.clone();
             spawn(async move {
-                toggle_read(api, db, article).await;
+                toggle_read(api, db, tree, notice, article).await;
             });
         }
     });
