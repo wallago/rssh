@@ -98,11 +98,19 @@ pub fn FeedNodeView(node: ReadSignal<FeedNode>) -> Element {
             expanded: node().expanded,
             on_click: move |_| toggle_feed(tree, node()),
             on_swipe_left: {
+                let api = api.clone();
+                let db = db.clone();
                 move |_| {
-                    // spawn(async move {
-                    //     mark_feed_read(api, db, node.clone()).await;
-                    //     set_feed_articles_read(tree, node);
-                    // });
+                    let api = api.clone();
+                    let db = db.clone();
+                    spawn(async move {
+                        if let Some(cats) = tree() {
+                            let articles = iter_articles(cats, Some(node().feed.category.id), Some(node().feed.id), Some(Filter::Unread));
+                            for a in articles {
+                                toggle_read(api.clone(), db.clone(), tree, notice, a).await;
+                            }
+                        }
+                    });
                 }
             },
         }
@@ -118,11 +126,10 @@ pub fn FeedNodeView(node: ReadSignal<FeedNode>) -> Element {
                     },
                     Some(articles)      => {
                         let visible: Vec<_> = articles.iter()
-                            .cloned()
                             .filter(|a| a.matches(filter()))
                             .collect();
                         rsx! {
-                            {visible.iter().cloned().enumerate().map(|(i, article)| {
+                            {visible.iter().cloned().map(|article| {
                                 let api = api.clone();
                                 let db  = db.clone();
                                 let article = article.clone();
@@ -132,7 +139,7 @@ pub fn FeedNodeView(node: ReadSignal<FeedNode>) -> Element {
                                         article: article.clone(),
                                         is_selected: false,
                                         on_click: {
-                                            let id = article.id.clone();
+                                            let id = article.id;
                                             move |_| {
                                                 navigator().push(Route::Reader { id });
                                             }

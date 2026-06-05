@@ -57,6 +57,9 @@ pub fn write_all(
     entries: &[miniflux_api::models::Entry],
 ) -> rusqlite::Result<()> {
     let tx = conn.transaction()?;
+    tx.execute("DELETE FROM entries", [])?;
+    tx.execute("DELETE FROM feeds", [])?;
+    tx.execute("DELETE FROM categories", [])?;
     for c in cats {
         tx.execute(
             "INSERT OR REPLACE INTO categories (id,title) VALUES (?1,?2)",

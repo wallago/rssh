@@ -97,3 +97,24 @@
   color: #9a9a9a;
   margin: 0 0 1em;
 }
+
+.reader-viewport {
+  width: 100vw;
+  height: 100%;
+  overflow: hidden;
+  touch-action: pan-y; /* vertical scroll native, horizontal handled by pointer events */
+}
+.reader-track {
+  display: flex;
+  width: 300vw;
+  height: 100%;
+  transform: translateX(-100vw); /* center pane visible at rest */
+}
+.reader-track.settling {
+  transition: transform 0.25s ease-out;
+}
+.reader-pane {
+  flex: 0 0 100vw;
+  height: 100%;
+  overflow-y: auto;
+}

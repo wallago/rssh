@@ -34,6 +34,7 @@ const SEARCH: Asset = asset!("/assets/search.css");
 const SKELETON: Asset = asset!("/assets/skeleton.css");
 const SWIPE: Asset = asset!("/assets/swipe.css");
 const TOAST: Asset = asset!("/assets/toast.css");
+const PULL_INDICATOR: Asset = asset!("/assets/pull-indicator.css");
 
 #[derive(Routable, Clone, PartialEq)]
 enum Route {
@@ -111,6 +112,7 @@ fn App() -> Element {
         document::Stylesheet { href: SKELETON }
         document::Stylesheet { href: SWIPE }
         document::Stylesheet { href: TOAST }
+        document::Stylesheet { href: PULL_INDICATOR }
         Toast {}
         Router::<Route> {}
     }

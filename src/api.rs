@@ -17,13 +17,13 @@ pub fn get_api_conn() -> Option<Arc<MinifluxApi>> {
 pub async fn fetch_all(
     api: &MinifluxApi,
     client: &Client,
-) -> Option<(
+) -> anyhow::Result<(
     Vec<miniflux_api::models::Category>,
     Vec<miniflux_api::models::Feed>,
     Vec<miniflux_api::models::Entry>,
 )> {
-    let categories = api.get_categories(client).await.ok()?;
-    let feeds = api.get_feeds(client).await.ok()?;
+    let categories = api.get_categories(client).await?;
+    let feeds = api.get_feeds(client).await?;
     let mut entries = Vec::new();
     let (mut offset, limit) = (0i64, 250i64);
     loop {
@@ -41,8 +41,7 @@ pub async fn fetch_all(
                 None,
                 client,
             )
-            .await
-            .ok()?;
+            .await?;
         let got = page.len() as i64;
         entries.extend(page);
         if got < limit {
@@ -50,5 +49,5 @@ pub async fn fetch_all(
         }
         offset += limit;
     }
-    Some((categories, feeds, entries))
+    Ok((categories, feeds, entries))
 }

@@ -86,19 +86,28 @@ pub fn CategoryNodeView(node: ReadSignal<CategoryNode>) -> Element {
     let filter = use_context::<Signal<Filter>>();
     let api = use_context::<Arc<MinifluxApi>>();
     let db = use_context::<Arc<Mutex<Connection>>>();
+    let notice = use_context::<Signal<Option<Notice>>>();
 
     rsx! {
         CategoryRow {
             category: node().category,
-            count:  iter_articles(tree().unwrap_or(Vec::new()), Some(node().category.id), None, Some(filter())).count(),
+            count:  iter_articles(tree().unwrap_or_default(), Some(node().category.id), None, Some(filter())).count(),
             expanded: node().expanded,
             on_click: move |_| toggle_category(tree,node()),
             on_swipe_left: {
+                let api = api.clone();
+                let db = db.clone();
                 move |_| {
-                    // spawn(async move {
-                    //     mark_category_read(api, db, node.clone()).await;
-                    //     set_category_articles_read(tree, node);
-                    // });
+                    let api = api.clone();
+                    let db = db.clone();
+                    spawn(async move {
+                        if let Some(cats) = tree() {
+                            let articles = iter_articles(cats, Some(node().category.id), None, Some(Filter::Unread));
+                            for a in articles {
+                                toggle_read(api.clone(), db.clone(), tree, notice, a).await;
+                            }
+                        }
+                    });
                 }
             },
         }

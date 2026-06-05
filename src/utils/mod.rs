@@ -3,12 +3,11 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use anyhow::Result;
+use anyhow::Context;
 use dioxus::signals::{Signal, WritableExt};
-use futures::future::join_all;
-use miniflux_api::{ApiError, MinifluxApi};
+use miniflux_api::MinifluxApi;
 use reqwest::Client;
-use rusqlite::{Connection, params};
+use rusqlite::Connection;
 
 pub mod prelude {
     pub use crate::utils::article::*;
@@ -48,10 +47,10 @@ pub fn string_to_color(s: &str) -> String {
     format!("#{:02x}{:02x}{:02x}", to(r), to(g), to(b))
 }
 
-pub async fn refresh(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>) -> Option<()> {
+pub async fn refresh(api: Arc<MinifluxApi>, db: Arc<Mutex<Connection>>) -> anyhow::Result<()> {
     let (c, f, e) = fetch_all(&api, &Client::new()).await?;
-    let mut conn = db.lock().ok()?;
-    write_all(&mut *conn, &c, &f, &e).ok()
+    let mut conn = db.lock().map_err(|_| anyhow::anyhow!("DB lock poisoned"))?;
+    write_all(&mut *conn, &c, &f, &e).context("failed to update DB")
 }
 
 pub async fn sync_and_load(
@@ -73,9 +72,7 @@ pub async fn sync_and_load(
         } else {
             "initial sync…"
         })));
-        refresh(api, db.clone())
-            .await
-            .ok_or_else(|| anyhow::anyhow!("refresh failed"))?;
+        refresh(api, db.clone()).await?;
     }
 
     notice.set(Some(Notice::sync("loading…")));

@@ -1,6 +1,4 @@
 use dioxus::prelude::*;
-use miniflux_api::models::{Entry, EntryStatus};
-use strum::EnumIter;
 
 use rssh::prelude::*;
 
@@ -25,12 +23,6 @@ pub fn ArticleRow(
         (true, false) => "article-row selected",
         (false, true) => "article-row read",
         (false, false) => "article-row",
-    };
-
-    let row_class = if horizontal() {
-        format!("{class} dragging")
-    } else {
-        class.to_string()
     };
 
     rsx! {

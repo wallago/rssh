@@ -43,44 +43,45 @@ pub fn Toast() -> Element {
         return rsx! {};
     };
 
-    let (label, bg, show_spinner, retry) = match &current.kind {
-        NoticeKind::Sync(s) => (s.clone(), "#323232", true, None),
-        NoticeKind::Info(s) => (s.clone(), "#323232", false, None),
-        NoticeKind::Error { msg, retry } => (msg.clone(), "#B00020", false, retry.clone()),
+    let (label, is_error, show_spinner, retry) = match &current.kind {
+        NoticeKind::Sync(s) => (s.clone(), false, true, None),
+        NoticeKind::Info(s) => (s.clone(), false, false, None),
+        NoticeKind::Error { msg, retry } => (msg.clone(), true, false, retry.clone()),
     };
+    let toast_class = if is_error { "toast error" } else { "toast" };
 
     rsx! {
-        div {
-            style: "position:fixed; left:16px; right:16px; bottom:16px;
-                    padding:14px 16px; border-radius:8px; color:#fff;
-                    display:flex; align-items:center; gap:12px;
-                    background:{bg}; box-shadow:0 2px 8px rgba(0,0,0,.3);",
+        div { class: "toast-wrap",
+            div { class: "{toast_class}",
+                if show_spinner {
+                    span { class: "toast-spinner" }
+                } else {
+                    span { class: "toast-dot" }
+                }
+                span { class: "toast-label", "{label}" }
 
-            if show_spinner { span { "⏳" } }
-            span { style: "flex:1;", "{label}" }
-
-            if let Some(r) = retry {
-                button {
-                    style: "background:transparent; border:none; color:#fff;
-                            font-weight:600; padding:6px 8px;",
-                    onclick: move |_| {
-                        let db = db.clone();
-                        let api = api.clone();
-                        notice.set(None);
-                        spawn(async move {
-                            match r {
-                                Retry::Refresh => {
-                                    if let Err(e) = sync_and_load(api, db,notice, tree, false).await {
-                                        notice.set(Some(Notice::error(
-                                            format!("Retry failed: {e}"),
-                                            Some(Retry::Refresh),
-                                        )));
+                if let Some(r) = retry {
+                    button {
+                        class: "toast-retry",
+                        onclick: move |_| {
+                            let db = db.clone();
+                            let api =api.clone();
+                            notice.set(None);
+                            spawn(async move {
+                                match r {
+                                    Retry::Refresh => {
+                                        if let Err(e) = sync_and_load(api, db, notice, tree, false).await {
+                                            notice.set(Some(Notice::error(
+                                                        format!("Retry failed: {e}"),
+                                                        Some(Retry::Refresh),
+                                            )));
+                                        }
                                     }
                                 }
-                            }
-                        });
-                    },
-                    "Retry"
+                            });
+                        },
+                        "Retry"
+                    }
                 }
             }
         }

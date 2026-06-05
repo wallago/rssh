@@ -31,6 +31,7 @@ pub fn build_tree(
                 feeds: Some(cat_feeds),
             }
         })
+        .filter(|node| node.feeds.as_ref().is_some_and(|f| !f.is_empty()))
         .collect()
 }
 
@@ -113,4 +114,38 @@ pub fn update_article(
             }
         }
     }
+}
+
+pub fn article_by_id(cats: &[CategoryNode], id: i64) -> Option<Article> {
+    cats.iter()
+        .flat_map(|c| c.feeds.iter().flatten())
+        .flat_map(|f| f.articles.iter().flatten())
+        .find(|a| a.id == id)
+        .cloned()
+}
+
+pub fn feed_by_id(cats: &[CategoryNode], id: i64) -> Option<Feed> {
+    cats.iter()
+        .flat_map(|c| c.feeds.iter().flatten())
+        .find(|f| f.feed.id == id)
+        .map(|f| f.feed.clone())
+}
+
+pub fn cat_by_id(cats: &[CategoryNode], id: i64) -> Option<Category> {
+    cats.iter()
+        .find(|c| c.category.id == id)
+        .map(|c| c.category.clone())
+}
+
+pub fn feed_nav_ids(
+    cats: &[CategoryNode],
+    cat_id: i64,
+    feed_id: i64,
+    filter: Filter,
+    keep: i64,
+) -> Vec<i64> {
+    iter_articles(cats.to_vec(), Some(cat_id), Some(feed_id), None)
+        .filter(|a| a.matches(filter) || a.id == keep)
+        .map(|a| a.id)
+        .collect()
 }
