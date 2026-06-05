@@ -57,9 +57,18 @@ pub fn toggle_category(mut tree: Signal<Option<Vec<CategoryNode>>>, node: Catego
     }
 }
 
-pub fn toggle_feed(mut node: FeedNode) {
-    tracing::debug!("expand feed: {}", node.feed.label);
-    node.expanded = !node.expanded;
+pub fn toggle_feed(mut tree: Signal<Option<Vec<CategoryNode>>>, mut node: FeedNode) {
+    if let Some(cats) = tree.write().as_mut() {
+        if let Some(feed) = cats
+            .iter_mut()
+            .filter_map(|c| c.feeds.as_mut())
+            .flatten()
+            .find(|f| f.feed.id == node.feed.id)
+        {
+            tracing::debug!("toggle expanded feed: {}", node.feed.label);
+            feed.expanded = !feed.expanded;
+        }
+    }
 }
 
 pub fn iter_articles(

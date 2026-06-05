@@ -99,7 +99,7 @@ pub fn FeedNodeView(node: ReadSignal<FeedNode>) -> Element {
             feed: node().feed,
             count:  iter_articles(tree().unwrap_or_default(), Some(node().feed.category.id), Some(node().feed.id), Some(filter())).count(),
             expanded: node().expanded,
-            on_click: move |_| toggle_feed(node()),
+            on_click: move |_| toggle_feed(tree, node()),
             on_swipe_left: {
                 move |_| {
                     // spawn(async move {
