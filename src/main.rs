@@ -1,16 +1,6 @@
-use std::{
-    env,
-    rc::Rc,
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
-
 use dioxus::prelude::*;
-use dioxus_router::RouterConfig;
-use dioxus_web::WebHistory;
 use miniflux_api::MinifluxApi;
-use reqwest::Url;
-use rusqlite::{Connection, Result, params};
+use rusqlite::Connection;
 
 use crate::{
     components::{bar::BottomBar, toast::Toast},
@@ -61,41 +51,13 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    // Load local DB Connection
-    use_context_provider(|| {
-        let db = get_db_conn().expect("failed to get DB connection");
-        db
-    });
-
-    // Load Miniflux Connection
-    use_context_provider(|| {
-        let api = get_api_conn().expect("failed to get Miniflux connection");
-        api
-    });
-
-    let mut tree: Signal<Option<Vec<CategoryNode>>> = use_signal(|| None);
-    use_context_provider(|| tree);
-
-    let mut notice: Signal<Option<Notice>> = use_signal(|| None);
-    use_context_provider(|| notice);
-
-    let filter: Signal<Filter> = use_signal(|| Filter::Unread);
-    use_context_provider(|| filter);
-
-    let api = use_context::<Arc<MinifluxApi>>();
-    let db = use_context::<Arc<Mutex<Connection>>>();
-
-    use_future(move || {
-        let db = db.clone();
-        let api = api.clone();
-        async move {
-            if let Err(e) = sync_and_load(api, db, notice, tree, false).await {
-                tracing::error!("startup load failed: {e:?}");
-                notice.set(Some(Notice::error(
-                    format!("Couldn't load data: {e}"),
-                    Some(Retry::Refresh),
-                )));
-            }
+    use_future(move || async move {
+        if let Err(e) = SERVER().sync_and_load(false).await {
+            tracing::error!("startup load failed: {e:?}");
+            NOTICE().set(Some(Notice::error(
+                format!("Couldn't load data: {e}"),
+                Some(Retry::SyncApp),
+            )));
         }
     });
 
