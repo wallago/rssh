@@ -12,19 +12,21 @@ use rssh::prelude::*;
 mod components;
 mod pages;
 
-const STYLE: Asset = asset!("/assets/style.css");
-const ARTICLE: Asset = asset!("/assets/article.css");
-const BAR: Asset = asset!("/assets/bar.css");
-const CATEGORY_FEED: Asset = asset!("/assets/category_feed.css");
-const HEADER: Asset = asset!("/assets/header.css");
-const MISC: Asset = asset!("/assets/misc.css");
-const PLACEHOLDER: Asset = asset!("/assets/placeholder.css");
-const READER: Asset = asset!("/assets/reader.css");
-const SEARCH: Asset = asset!("/assets/search.css");
-const SKELETON: Asset = asset!("/assets/skeleton.css");
-const SWIPE: Asset = asset!("/assets/swipe.css");
-const TOAST: Asset = asset!("/assets/toast.css");
-const PULL_INDICATOR: Asset = asset!("/assets/pull-indicator.css");
+const STYLES: &[Asset] = &[
+    asset!("/assets/style.css"),
+    asset!("/assets/article.css"),
+    asset!("/assets/bar.css"),
+    asset!("/assets/category_feed.css"),
+    asset!("/assets/header.css"),
+    asset!("/assets/misc.css"),
+    asset!("/assets/placeholder.css"),
+    asset!("/assets/reader.css"),
+    asset!("/assets/search.css"),
+    asset!("/assets/skeleton.css"),
+    asset!("/assets/swipe.css"),
+    asset!("/assets/toast.css"),
+    asset!("/assets/pull-indicator.css"),
+];
 
 #[derive(Routable, Clone, PartialEq)]
 enum Route {
@@ -51,30 +53,11 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    use_future(move || async move {
-        if let Err(e) = SERVER().sync_and_load(false).await {
-            tracing::error!("startup load failed: {e:?}");
-            NOTICE().set(Some(Notice::error(
-                format!("Couldn't load data: {e}"),
-                Some(Retry::SyncApp),
-            )));
-        }
-    });
-
+    use_future(|| async { SERVER().sync_app(false).await });
     rsx! {
-        document::Stylesheet { href: STYLE }
-        document::Stylesheet { href: ARTICLE }
-        document::Stylesheet { href: BAR }
-        document::Stylesheet { href: CATEGORY_FEED }
-        document::Stylesheet { href: HEADER }
-        document::Stylesheet { href: MISC }
-        document::Stylesheet { href: PLACEHOLDER }
-        document::Stylesheet { href: READER }
-        document::Stylesheet { href: SEARCH }
-        document::Stylesheet { href: SKELETON }
-        document::Stylesheet { href: SWIPE }
-        document::Stylesheet { href: TOAST }
-        document::Stylesheet { href: PULL_INDICATOR }
+        for style in STYLES {
+            document::Stylesheet { href: *style }
+        }
         Toast {}
         Router::<Route> {}
     }
