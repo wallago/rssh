@@ -1,20 +1,10 @@
-use std::sync::{Arc, Mutex};
-
 use dioxus::prelude::*;
-use miniflux_api::MinifluxApi;
 use rssh::prelude::*;
-use rusqlite::Connection;
 
 use crate::Route;
 
 #[component]
 pub fn Reader(id: ReadSignal<i64>) -> Element {
-    let tree = use_context::<Signal<Option<Vec<CategoryNode>>>>();
-    let api = use_context::<Arc<MinifluxApi>>();
-    let db = use_context::<Arc<Mutex<Connection>>>();
-    let notice = use_context::<Signal<Option<Notice>>>();
-    let filter = use_context::<Signal<Filter>>();
-
     let mut nav = use_signal(Vec::<i64>::new);
     let mut pos = use_signal(|| 0usize);
 
@@ -27,17 +17,19 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
     let threshold = 80.0;
     let offset = dx();
 
-    let article = use_memo(move || iter_articles(tree()?, None, None, None).find(|a| a.id == id()));
+    let article = use_memo(move || TREE.article_by_id(id()));
 
     use_effect(move || {
         if !nav.read().is_empty() {
             return;
         }
-        let Some(cats) = tree() else { return };
-        let Some(cur) = article_by_id(&cats, id()) else {
+        if TREE.read().is_none() {
+            return;
+        }
+        let Some(cur) = TREE.article_by_id(id()) else {
             return;
         };
-        let ids = feed_nav_ids(&cats, cur.feed.category.id, cur.feed.id, filter(), cur.id);
+        let ids = TREE.feed_nav_ids(cur.feed.category.id, cur.feed.id, FILTER(), cur.id);
         if let Some(p) = ids.iter().position(|x| *x == cur.id) {
             pos.set(p);
             nav.set(ids);
@@ -47,7 +39,7 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
     });
 
     use_effect(move || {
-        if matches!(tree(), Some(_)) && article().is_none() {
+        if TREE.read().is_some() && article().is_none() {
             navigator().replace(Route::Home {});
         }
     });
@@ -70,25 +62,23 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
         });
     });
 
-    let Some(article) = article() else {
+    if article().is_none() {
         return rsx! {
             div { class: "reader-page reader-loading", "Loading…" }
         };
-    };
+    }
 
     use_effect(move || {
         let ids = nav.read().clone();
         let Some(&cur_id) = ids.get(pos()) else {
             return;
         };
-        let Some(cats) = tree() else { return };
-        let Some(a) = article_by_id(&cats, cur_id) else {
+        let Some(a) = TREE.article_by_id(cur_id) else {
             return;
         };
         if !a.is_read {
-            let (api, db) = (api.clone(), db.clone());
             spawn(async move {
-                toggle_read(api, db, tree, notice, a).await;
+                SERVER().toggle_read_status(&mut a).await;
             });
         }
     });
@@ -97,25 +87,12 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
     if ids.is_empty() {
         return rsx! { div { class: "reader-page reader-loading", "Loading…" } };
     }
-    let cats = tree().unwrap_or_default();
     let cur = pos();
-    let get = |i: usize| ids.get(i).copied().and_then(|x| article_by_id(&cats, x));
+    let get = |i: usize| ids.get(i).copied().and_then(|x| TREE.article_by_id(x));
     let prev = if cur > 0 { get(cur - 1) } else { None };
     let current = get(cur);
     let next = get(cur + 1);
     let (has_prev, has_next) = (prev.is_some(), next.is_some());
-
-    let transform = match slide() {
-        1 => "translateX(-200vw)".to_string(), // sliding to next
-        -1 => "translateX(0vw)".to_string(),   // sliding to prev
-        _ => format!("translateX(calc(-100vw + {offset}px))"),
-    };
-    let settling = slide() != 0 || snapping();
-    let track_class = if settling {
-        "reader-track settling"
-    } else {
-        "reader-track"
-    };
 
     rsx! {
         div { class: "reader-viewport",

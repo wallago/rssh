@@ -1,3 +1,4 @@
+pub mod app;
 pub mod article;
 pub mod bar;
 pub mod category;
