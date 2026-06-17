@@ -6,8 +6,8 @@
 }
 
 .search-prompt {
-  color: #5fafd7;
-  font-size: 13px;
+  color: var(--accent);
+  font-size: var(--fs-base);
 }
 
 .search-input {
@@ -15,12 +15,12 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #e4e4e4;
+  color: var(--text);
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--fs-base);
   padding: 0;
 }
 
 .search-input::placeholder {
-  color: #444;
+  color: var(--text-faint);
 }

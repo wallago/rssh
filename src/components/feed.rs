@@ -81,6 +81,7 @@ pub fn FeedNodeView(node: ReadSignal<FeedNode>) -> Element {
                                     on_click: {
                                         let id = article.id;
                                         move |_| {
+                                            *READER_IDS.write() = None;
                                             navigator().push(Route::Reader { id });
                                         }
                                     },

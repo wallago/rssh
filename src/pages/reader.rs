@@ -29,7 +29,10 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
         let Some(cur) = TREE.article_by_id(id()) else {
             return;
         };
-        let ids = TREE.feed_nav_ids(cur.feed.category.id, cur.feed.id, FILTER(), cur.id);
+        let ids = match READER_IDS() {
+            Some(list) => list,
+            None => TREE.feed_nav_ids(cur.feed.category.id, cur.feed.id, FILTER(), cur.id),
+        };
         if let Some(p) = ids.iter().position(|x| *x == cur.id) {
             pos.set(p);
             nav.set(ids);
@@ -73,7 +76,7 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
         let Some(&cur_id) = ids.get(pos()) else {
             return;
         };
-        let Some(a) = TREE.article_by_id(cur_id) else {
+        let Some(mut a) = TREE.article_by_id(cur_id) else {
             return;
         };
         if !a.is_read {
@@ -93,6 +96,20 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
     let current = get(cur);
     let next = get(cur + 1);
     let (has_prev, has_next) = (prev.is_some(), next.is_some());
+
+    let animating = slide() != 0 || snapping();
+
+    let track_class = if animating {
+        "reader-track settling"
+    } else {
+        "reader-track"
+    };
+
+    let transform = match slide() {
+        1 => "translateX(-200vw)".to_string(),
+        -1 => "translateX(0%)".to_string(),
+        _ => format!("translateX(calc(-100vw + {offset}px))"),
+    };
 
     rsx! {
         div { class: "reader-viewport",
@@ -122,6 +139,7 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
                 }
             },
             onpointerup: move |_| {
+                let settling = slide() != 0 || snapping();
                 if settling { return; }
                 let v = dx();
                 horizontal.set(false);

@@ -1,0 +1,43 @@
+/* Design tokens — single source of truth for color, type and motion.
+   Loaded first (see STYLES in main.rs) so every other sheet can use var(). */
+:root {
+  /* surfaces */
+  --bg: #0d0d0d;
+  --bg-raised: #141414; /* expanded rows, code blocks */
+  --bg-active: #181818; /* :active press state */
+  --bg-selected: #141822; /* selected article row */
+
+  /* lines */
+  --border: #1f1f1f;
+  --border-strong: #262626; /* toast pill */
+
+  /* text */
+  --text: #e4e4e4;
+  --text-dim: #cfcfcf;
+  --text-soft: #7a7a7a; /* snippets, secondary copy */
+  --text-muted: #6e6e6e; /* meta, counts */
+  --text-faint: #444; /* read-state, hints */
+
+  /* accents */
+  --accent: #5fafd7;
+  --accent-soft: #8fd0ee;
+  --success: #87d75f;
+  --star: #e5c07b;
+  --danger: #e0495c;
+
+  /* swipe-action backgrounds */
+  --swipe-read: #2d6cdf;
+  --swipe-star: #c39000;
+
+  /* type scale */
+  --fs-2xs: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 13px;
+  --fs-md: 15px;
+  --fs-lg: 16px;
+
+  /* motion */
+  --dur-fast: 0.12s;
+  --dur-med: 0.18s;
+}

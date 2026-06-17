@@ -6,10 +6,10 @@
 
 html,
 body {
-  background: #0d0d0d;
-  color: #e4e4e4;
+  background: var(--bg);
+  color: var(--text);
   font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Menlo", monospace;
-  font-size: 13px;
+  font-size: var(--fs-base);
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
 }
@@ -18,7 +18,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #0d0d0d;
+  height: 100dvh; /* avoids Android browser-chrome clipping the bottom bar */
+  background: var(--bg);
 }
 
 .app-main {

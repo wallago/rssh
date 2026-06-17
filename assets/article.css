@@ -8,26 +8,26 @@
   position: relative;
   display: flex;
   padding: 12px 20px 12px 16px;
-  border-bottom: 1px solid #1f1f1f;
-  background: #0d0d0d;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
   cursor: pointer;
   transition:
-    background 0.12s ease,
-    transform 0.18s ease;
+    background var(--dur-fast) ease,
+    transform var(--dur-med) ease;
   touch-action: pan-y;
   will-change: transform;
 }
 
 .article-row.dragging {
-  transition: background 0.12s ease; /* no transform anim while finger is down */
+  transition: background var(--dur-fast) ease; /* no transform anim while finger is down */
 }
 
 .article-row:active {
-  background: #181818;
+  background: var(--bg-active);
 }
 
 .article-row.selected {
-  background: #141822;
+  background: var(--bg-selected);
 }
 
 .source-bar {
@@ -51,7 +51,7 @@
 }
 
 .source-name {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
 
@@ -62,18 +62,18 @@
 }
 
 .star {
-  color: #e5c07b;
-  font-size: 10px;
+  color: var(--star);
+  font-size: var(--fs-2xs);
 }
 
 .timestamp {
-  color: #6e6e6e;
-  font-size: 11px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
 }
 
 .article-title {
-  color: #e4e4e4;
-  font-size: 13px;
+  color: var(--text);
+  font-size: var(--fs-base);
   font-weight: 600;
   line-height: 1.35;
   margin-bottom: 3px;
@@ -83,8 +83,8 @@
 }
 
 .article-snippet {
-  color: #7a7a7a;
-  font-size: 11px;
+  color: var(--text-soft);
+  font-size: var(--fs-xs);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -99,12 +99,12 @@
   opacity: 0.5;
 }
 .article-row.read .article-title {
-  color: #6e6e6e;
+  color: var(--text-muted);
   font-weight: 400;
 }
 .article-row.read .article-snippet {
-  color: #444;
+  color: var(--text-faint);
 }
 .article-row.read .timestamp {
-  color: #444;
+  color: var(--text-faint);
 }

@@ -5,15 +5,15 @@
   overflow: hidden;
   flex: 0 0 auto;
   height: 0;
-  color: #6e6e6e;
-  font-size: 11px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
   letter-spacing: 0.04em;
-  background: #0d0d0d;
+  background: var(--bg);
   user-select: none;
   -webkit-user-select: none;
   white-space: nowrap;
 }
 
 .pull-indicator:not(:empty) {
-  border-bottom: 1px solid #1f1f1f;
+  border-bottom: 1px solid var(--border);
 }

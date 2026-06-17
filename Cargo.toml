@@ -19,6 +19,11 @@ serde = { version = "1.0.228", features = ["derive"] }
 strum = { version = "0.28.0", features = ["derive"] }
 tokio = "1.52.3"
 tracing = "0.1.44"
+fastrand = "2.4.1"
+
+# Android-only: lets us reach the JavaVM + Activity to theme the system bars.
+[target.'cfg(target_os = "android")'.dependencies]
+ndk-context = "0.1.1"
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

@@ -49,6 +49,7 @@ impl Server {
         };
 
         if empty || force {
+            *TREE.write() = None;
             *NOTICE.write() = Some(Notice::sync(if force {
                 "refreshing…"
             } else {

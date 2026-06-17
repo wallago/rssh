@@ -9,8 +9,8 @@
 }
 
 .app-title {
-  color: #5fafd7;
-  font-size: 15px;
+  color: var(--accent);
+  font-size: var(--fs-md);
   font-weight: 700;
 }
 
@@ -18,12 +18,12 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #87d75f;
+  background: var(--success);
   box-shadow: 0 0 6px rgba(135, 215, 95, 0.5);
 }
 
 .header-meta {
   margin-top: 4px;
-  color: #6e6e6e;
-  font-size: 11px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
 }

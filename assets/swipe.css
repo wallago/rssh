@@ -12,25 +12,27 @@
   align-items: center;
   justify-content: flex-end;
   padding: 0 20px;
-  background: #2d6cdf; /* tweak to taste */
+  background: var(--swipe-read);
   color: #fff;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.5px;
   pointer-events: none; /* never intercepts touches */
 }
 
+/* right half — "Read" */
 .swipe-action-right {
   left: 50%;
   right: 0;
   justify-content: flex-end;
-  background: #2d6cdf; /* "Read" — same as before */
+  background: var(--swipe-read);
 }
 
+/* left half — "Star" */
 .swipe-action-left {
   left: 0;
   right: 50%;
   justify-content: flex-start;
-  background: #c39000; /* amber for star — pick your color */
-  font-size: 16px;
+  background: var(--swipe-star);
+  font-size: var(--fs-lg);
 }

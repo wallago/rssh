@@ -12,3 +12,7 @@ pub static NOTICE: GlobalSignal<Option<Notice>> = Signal::global(|| None);
 
 /// Active article filter
 pub static FILTER: GlobalSignal<Filter> = Signal::global(|| Filter::Unread);
+
+/// Explicit id sequence the Reader should swipe through (set by the list
+/// pages). `None` → Reader falls back to per-feed navigation.
+pub static READER_IDS: GlobalSignal<Option<Vec<i64>>> = Signal::global(|| None);

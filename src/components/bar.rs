@@ -5,20 +5,24 @@ use rssh::prelude::*;
 use crate::Route;
 
 #[component]
-pub fn BottomBar() -> Element {
+pub fn NavTabs() -> Element {
     let route = use_route::<Route>();
+    let tabs = [
+        (Route::Home {}, "≡", "Home"),
+        (Route::Random {}, "⤮", "Random"),
+        (Route::Sorted {}, "↧", "Sorted"),
+    ];
     rsx! {
         nav { class: "bottom-bar",
-            { match route {
-                Route::Home {} => rsx! { InboxFilters {} },
-                Route::Reader { id } => {
-                    if let Some(article) = TREE.article_by_id(id) {
-                        rsx! { ArticleActions { article } }
-                    } else {
-                        rsx! {}
-                    }
-                },
-            } }
+            for (r, icon, label) in tabs {
+                button {
+                    key: "{label}",
+                    class: if r == route { "bb-button active" } else { "bb-button" },
+                    onclick: move |_| { navigator().push(r.clone()); },
+                    span { class: "bb-icon", "{icon}" }
+                    span { class: "bb-label", "{label}" }
+                }
+            }
         }
     }
 }

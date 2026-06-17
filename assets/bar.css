@@ -1,7 +1,7 @@
 .bottom-bar {
   display: flex;
-  background: #0d0d0d;
-  border-top: 1px solid #1f1f1f;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
   padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
 }
 
@@ -14,22 +14,22 @@
   gap: 3px;
   background: transparent;
   border: none;
-  color: #6e6e6e;
+  color: var(--text-muted);
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   cursor: pointer;
   padding: 6px 4px;
   text-decoration: none;
-  transition: color 0.12s ease;
+  transition: color var(--dur-fast) ease;
 }
 .bb-button.active {
-  color: #5fafd7;
+  color: var(--accent);
 }
 .bb-icon {
-  font-size: 16px;
+  font-size: var(--fs-lg);
   line-height: 1;
 }
 .bb-label {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1;
 }

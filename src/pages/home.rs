@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use rssh::prelude::*;
 
-use crate::components::{category::CategoryNodeView, skeleton::SkeletonRow};
+use crate::components::{app::AppHeader, category::CategoryNodeView, skeleton::SkeletonRow};
 
 #[component]
 pub fn Home() -> Element {

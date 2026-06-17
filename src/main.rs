@@ -1,11 +1,8 @@
-use dioxus::prelude::*;
-use miniflux_api::MinifluxApi;
-use rusqlite::Connection;
-
 use crate::{
-    components::{bar::BottomBar, toast::Toast},
-    pages::{home::Home, reader::Reader},
+    components::{bar::NavTabs, toast::Toast},
+    pages::{home::Home, random::Random, reader::Reader, sorted::Sorted},
 };
+use dioxus::prelude::*;
 
 use rssh::prelude::*;
 
@@ -13,6 +10,7 @@ mod components;
 mod pages;
 
 const STYLES: &[Asset] = &[
+    asset!("/assets/tokens.css"),
     asset!("/assets/style.css"),
     asset!("/assets/article.css"),
     asset!("/assets/bar.css"),
@@ -33,6 +31,10 @@ enum Route {
     #[layout(AppLayout)]
     #[route("/")]
     Home {},
+    #[route("/random")]
+    Random {},
+    #[route("/sorted")]
+    Sorted {},
     #[route("/article/:id")]
     Reader { id: i64 },
 }
@@ -42,7 +44,7 @@ fn AppLayout() -> Element {
     rsx! {
         div { class: "app",
             main { class: "app-main", Outlet::<Route> {} }
-            BottomBar {}
+            NavTabs {}
         }
     }
 }
@@ -53,6 +55,13 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    use_effect(|| {
+        if let Err(e) = theme_system_bars() {
+            // {e:?} on an anyhow::Error includes the full cause chain,
+            // i.e. the Java exception message from the failing JNI call.
+            eprintln!("THEME_BARS_ERROR: {e:?}");
+        }
+    });
     use_future(|| async { SERVER().sync_app(false).await });
     rsx! {
         for style in STYLES {
