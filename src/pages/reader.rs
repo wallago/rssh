@@ -175,9 +175,20 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
 
 fn article_view(article: Article) -> Element {
     rsx! {
-        div { class: "reader-page",
+        div { class: "reader-page", key: "{article.id}",
             div { class: "reader-header",
                 span { class: "reader-source", style: "color: {article.feed.category.color}", "{article.feed.label}" }
+                button {
+                    class: if article.is_starred { "reader-action active" } else { "reader-action" },
+                    onclick: {
+                        let a = article.clone();
+                        move |_| {
+                            let mut a = a.clone();
+                            spawn(async move { SERVER().toggle_star_status(&mut a).await; });
+                        }
+                    },
+                    "★ Mark"
+                }
                 a { class: "reader-open", href: "{article.url}", target: "_blank", rel: "noopener noreferrer", "Open ↗" }
             }
             div { class: "reader-body",

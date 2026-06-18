@@ -1,5 +1,8 @@
 use crate::{
-    components::{bar::NavTabs, toast::Toast},
+    components::{
+        bar::{FilterBar, NavTabs},
+        toast::Toast,
+    },
     pages::{home::Home, random::Random, reader::Reader, sorted::Sorted},
 };
 use dioxus::prelude::*;
@@ -41,8 +44,13 @@ enum Route {
 
 #[component]
 fn AppLayout() -> Element {
+    let route = use_route::<Route>();
+    let show_filter = !matches!(route, Route::Reader { .. });
     rsx! {
         div { class: "app",
+            if show_filter {
+                FilterBar {}
+            }
             main { class: "app-main", Outlet::<Route> {} }
             NavTabs {}
         }

@@ -28,51 +28,26 @@ pub fn NavTabs() -> Element {
 }
 
 #[component]
-fn InboxFilters() -> Element {
+pub fn FilterBar() -> Element {
     let current = FILTER();
 
     let chips = [
-        (Filter::All, "≡", "All"),
         (Filter::Unread, "●", "Unread"),
-        (Filter::Starred, "★", "Starred"),
+        (Filter::Starred, "★", "Marked"),
+        (Filter::All, "≡", "All"),
     ];
 
     rsx! {
-        for (f, icon, label) in chips {
-            button {
-                key: "{label}",
-                class: if f == current { "bb-button active" } else { "bb-button" },
-                onclick: move |_| *FILTER.write() = f,
-                span { class: "bb-icon", "{icon.to_string()}" }
-                span { class: "bb-label", "{label.to_string()}" }
+        nav { class: "top-bar",
+            for (f, icon, label) in chips {
+                button {
+                    key: "{label}",
+                    class: if f == current { "bb-button active" } else { "bb-button" },
+                    onclick: move |_| *FILTER.write() = f,
+                    span { class: "bb-icon", "{icon}" }
+                    span { class: "bb-label", "{label}" }
+                }
             }
-        }
-    }
-}
-
-#[component]
-fn ArticleActions(article: ReadSignal<Article>) -> Element {
-    let is_starred = article().is_starred;
-    let url = article().url;
-
-    rsx! {
-        button {
-            class: if is_starred { "bb-button active" } else { "bb-button" },
-            onclick: move |_| {
-                spawn(async move {
-                    SERVER().toggle_star_status(&mut article()).await;
-                });
-            },
-            span { class: "bb-icon", "★" }
-            span { class: "bb-label", "Star" }
-        }
-        a {
-            class: "bb-button",
-            href: "{url.to_string()}",
-            target: "_blank",
-            rel: "noopener noreferrer",
-            span { class: "bb-icon", "↗" }
-            span { class: "bb-label", "Open" }
         }
     }
 }

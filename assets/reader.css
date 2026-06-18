@@ -1,8 +1,7 @@
 .reader-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  height: 100%;
   background: var(--bg);
 }
 
@@ -119,5 +118,19 @@
 .reader-pane {
   flex: 0 0 100vw;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: hidden;
+}
+
+.reader-action {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.reader-action.active {
+  color: var(--accent);
 }

@@ -33,3 +33,10 @@
   font-size: var(--fs-xs);
   line-height: 1;
 }
+
+.top-bar {
+  display: flex;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: calc(6px + env(safe-area-inset-top)) 0 6px;
+}

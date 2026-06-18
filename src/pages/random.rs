@@ -6,6 +6,25 @@ use rssh::prelude::*;
 pub fn Random() -> Element {
     // Shuffle order captured once when the page opens (frozen).
     let mut order = use_signal(Vec::<i64>::new);
+    let mut built_for = use_signal(|| None::<Filter>);
+
+    use_effect(move || {
+        let f = FILTER();
+        if built_for() == Some(f) {
+            return;
+        }
+        if TREE.read().is_none() {
+            return;
+        }
+        let mut ids: Vec<i64> = TREE
+            .articles(None, None, Some(f))
+            .iter()
+            .map(|a| a.id)
+            .collect();
+        fastrand::shuffle(&mut ids);
+        order.set(ids);
+        built_for.set(Some(f));
+    });
 
     use_effect(move || {
         if !order.read().is_empty() {
@@ -29,9 +48,10 @@ pub fn Random() -> Element {
             .read()
             .iter()
             .filter_map(|id| TREE.article_by_id(*id))
-            .filter(|a| !a.is_read)
+            .filter(|a| a.matches(FILTER()))
             .collect::<Vec<_>>()
     });
+
     rsx! {
         div { class: "page",
             div { class: "tree",

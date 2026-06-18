@@ -5,7 +5,7 @@ use rssh::prelude::*;
 #[component]
 pub fn Sorted() -> Element {
     let articles = use_memo(|| {
-        let mut a = TREE.articles(None, None, Some(Filter::Unread));
+        let mut a = TREE.articles(None, None, Some(FILTER()));
         a.sort_by(|x, y| y.timestamp.cmp(&x.timestamp)); // newest first
         a
     });
