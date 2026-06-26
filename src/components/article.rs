@@ -19,9 +19,11 @@ pub fn ArticleRow(
         (false, false) => "article-row",
     };
 
+    let age = article.relative_time();
+
     rsx! {
         SwipeRow {
-            row_class: "{class}",
+            row_class: "{class.to_string()}",
             on_click,
             on_swipe_left,
             on_swipe_right: move |_| on_swipe_right.call(()),
@@ -40,7 +42,7 @@ pub fn ArticleRow(
                         if article.is_starred {
                             span { class: "star", "★" }
                         }
-                        span { class: "timestamp", "{article.timestamp}" }
+                        span { class: "timestamp", "{age.to_string()}" }
                     }
                 }
                 div { class: "article-title", "{article.title}" }

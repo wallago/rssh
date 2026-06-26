@@ -174,6 +174,8 @@ pub fn Reader(id: ReadSignal<i64>) -> Element {
 }
 
 fn article_view(article: Article) -> Element {
+    let age = article.relative_time();
+
     rsx! {
         div { class: "reader-page", key: "{article.id}",
             div { class: "reader-header",
@@ -194,7 +196,7 @@ fn article_view(article: Article) -> Element {
             div { class: "reader-body",
                 h1 { class: "reader-title", "{article.title}" }
                 div { class: "reader-meta",
-                    span { "{article.timestamp}" }
+                    span { "{age.to_string()}" }
                     if article.is_starred { span { class: "star", " · ★" } }
                 }
                 div { class: "reader-content", dangerous_inner_html: "{article.content}" }

@@ -12,23 +12,6 @@ use rssh::prelude::*;
 mod components;
 mod pages;
 
-const STYLES: &[Asset] = &[
-    asset!("/assets/tokens.css"),
-    asset!("/assets/style.css"),
-    asset!("/assets/article.css"),
-    asset!("/assets/bar.css"),
-    asset!("/assets/category_feed.css"),
-    asset!("/assets/header.css"),
-    asset!("/assets/misc.css"),
-    asset!("/assets/placeholder.css"),
-    asset!("/assets/reader.css"),
-    asset!("/assets/search.css"),
-    asset!("/assets/skeleton.css"),
-    asset!("/assets/swipe.css"),
-    asset!("/assets/toast.css"),
-    asset!("/assets/pull-indicator.css"),
-];
-
 #[derive(Routable, Clone, PartialEq)]
 enum Route {
     #[layout(AppLayout)]
@@ -58,6 +41,35 @@ fn AppLayout() -> Element {
 }
 
 fn main() {
+    #[cfg(target_os = "android")]
+    {
+        let css = [
+            include_str!("../assets/tokens.css"),
+            include_str!("../assets/style.css"),
+            include_str!("../assets/article.css"),
+            include_str!("../assets/bar.css"),
+            include_str!("../assets/category_feed.css"),
+            include_str!("../assets/header.css"),
+            include_str!("../assets/misc.css"),
+            include_str!("../assets/placeholder.css"),
+            include_str!("../assets/reader.css"),
+            include_str!("../assets/search.css"),
+            include_str!("../assets/skeleton.css"),
+            include_str!("../assets/swipe.css"),
+            include_str!("../assets/toast.css"),
+            include_str!("../assets/pull-indicator.css"),
+        ]
+        .concat();
+        dioxus::LaunchBuilder::mobile()
+            .with_cfg(
+                dioxus::mobile::Config::new()
+                    .with_background_color((13, 13, 13, 255))
+                    .with_custom_head(format!("<style>{css}</style>")),
+            )
+            .launch(App);
+    }
+
+    #[cfg(not(target_os = "android"))]
     dioxus::launch(App);
 }
 
@@ -72,9 +84,20 @@ fn App() -> Element {
     });
     use_future(|| async { SERVER().sync_app(false).await });
     rsx! {
-        for style in STYLES {
-            document::Stylesheet { href: *style }
-        }
+        document::Style { {include_str!("../assets/tokens.css")} }
+        document::Style { {include_str!("../assets/style.css")} }
+        document::Style { {include_str!("../assets/article.css")} }
+        document::Style { {include_str!("../assets/bar.css")} }
+        document::Style { {include_str!("../assets/category_feed.css")} }
+        document::Style { {include_str!("../assets/header.css")} }
+        document::Style { {include_str!("../assets/misc.css")} }
+        document::Style { {include_str!("../assets/placeholder.css")} }
+        document::Style { {include_str!("../assets/reader.css")} }
+        document::Style { {include_str!("../assets/search.css")} }
+        document::Style { {include_str!("../assets/skeleton.css")} }
+        document::Style { {include_str!("../assets/swipe.css")} }
+        document::Style { {include_str!("../assets/toast.css")} }
+        document::Style { {include_str!("../assets/pull-indicator.css")} }
         Toast {}
         Router::<Route> {}
     }

@@ -112,7 +112,7 @@ impl ConnectionExt for Connection {
                 e.title,
                 e.content,
                 e.url,
-                e.created_at,
+                e.published_at,
                 e.status,
                 e.starred
             ],
@@ -193,16 +193,7 @@ impl ConnectionExt for Connection {
                 snippet,
                 url,
                 content,
-                timestamp: {
-                    let raw = row.get::<_, Option<String>>(4)?.unwrap_or_default();
-                    let date = raw.get(0..10).unwrap_or(&raw);
-                    let time = raw.get(11..16).unwrap_or("");
-                    if time.is_empty() {
-                        date.to_string()
-                    } else {
-                        format!("{date} {time}")
-                    }
-                },
+                timestamp: row.get::<_, Option<String>>(4)?.unwrap_or_default(),
                 is_read: status == "read",
                 is_starred: row.get::<_, i64>(6)? != 0,
             })
